@@ -1,98 +1,57 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
-def get_dropout(name, std):
+def get_dropout(config, in_dim, out_dim, std):
+    name = config["name"]
     if name == "bernoulli":
-        return BernoulliDropout(std)
+        return BernoulliDropout(in_dim, out_dim, std, config)
     if name == "uniform":
-        return UniformDropout(std)
+        return UniformDropout(in_dim, out_dim, std, config)
     if name == "normal":
-        return NormalDropout(std)
-    if name == "log-normal":
-        return LogNormalDropout(std)
+        return NormalDropout(in_dim, out_dim, std, config)
+    if name == "reg":
+        return ExpRegularization(in_dim, out_dim, std, config)
+    if name == "l2":
+        return L2Regularization(in_dim, out_dim, std, config)
     raise Exception(f"unknown dropout '{name}'")
 
 
-class VariationalLayer(nn.Module):
+class DropoutLayer(nn.Linear):
 
-    def __init__(self, in_dim, out_dim, reg):
-        super().__init__()
-        self.fc_mu = nn.Linear(in_dim, out_dim)
-        self.fc_logvar = nn.Linear(in_dim, out_dim)
-        self.reg = reg
-
-    def forward(self, x):
-
-        mu = self.fc_mu(x)
-        logvar = self.fc_logvar(x)
-        self.state = (mu, logvar)
-
-        y = mu
-        if self.training:
-            std = torch.exp(0.5 * logvar)
-            eps = torch.randn_like(x)
-            y = y + std * eps
-        return y
-
-    def reg_loss(self):
-        if self.reg == 0:
-            return 0
-        mu, logvar = self.state
-        reg_loss = -0.5 * torch.sum(
-            1 + logvar - logvar.exp() - mu.square(), dim=1)
-        return reg_loss * self.reg
-
-
-class StatefulLayer(nn.Module):
-
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        self.state = x
-        return x
-
-
-class LinearLayer(nn.Linear):
-
-    def __init__(self, in_dim, out_dim, reg, lock):
+    def __init__(self, in_dim, out_dim, std, config):
         super().__init__(in_dim, out_dim)
-        self.reg = reg
-        if lock:
-            for param in self.parameters():
-                param.requires_grad = False
-
-    def extra_repr(self):
-        return f"{super().extra_repr()} reg={self.reg}"
-
-    def reg_loss(self):
-        if self.reg == 0:
-            return 0
-        return self.weight.square().sum() * self.reg
-
-
-class DropoutLayer(nn.Module):
-
-    def __init__(self, std):
-        super().__init__()
+        self.in_dim = in_dim
+        self.out_dim = out_dim
         self.std = std
+        self.on = config["on"]
         self._setup()
 
     def extra_repr(self):
-        return f"std={self.std}"
+        return f"in_dim={self.in_dim}, out_dim={self.out_dim}, std={self.std}, on={self.on}"
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor):
+        self.state = x
+        w, b = self.weight, self.bias
         if self.training and self.std != 0:
-            d = self._sample_like(x)
+            w, x = self._dropout(w, x)
+        return F.linear(x, w, b)
+
+    def _dropout(self, w, x):
+        if self.on == "state":
+            d = self._sample(x.shape)
             x = x * d
-        return x
+        if self.on == "weight":
+            d = self._sample(w.shape)
+            w = w * d
+        return w, x
 
     def _setup(self):
         pass
 
-    def _sample_like(self, x):
+    def _sample(self, shape) -> torch.Tensor:
         pass
 
 
@@ -101,8 +60,8 @@ class BernoulliDropout(DropoutLayer):
     def _setup(self):
         self._prob = 1 / (self.std * self.std + 1)
 
-    def _sample_like(self, x):
-        p = torch.full_like(x, self._prob)
+    def _sample(self, shape):
+        p = torch.full(shape, self._prob)
         return torch.bernoulli(p) / self._prob
 
 
@@ -113,26 +72,99 @@ class UniformDropout(DropoutLayer):
         self._scale = r * 2
         self._shift = 1 - r
 
-    def _sample_like(self, x):
-        return torch.rand_like(x) * self._scale + self._shift
+    def _sample(self, shape):
+        return torch.rand(shape) * self._scale + self._shift
 
 
 class NormalDropout(DropoutLayer):
 
-    def _sample_like(self, x):
-        m = torch.full_like(x, 1.0)
-        s = torch.full_like(x, self.std)
+    def _sample(self, shape):
+        m = torch.full(shape, 1.0)
+        s = torch.full(shape, self.std)
         return torch.normal(m, s)
 
 
-class LogNormalDropout(DropoutLayer):
+class Regularization(DropoutLayer):
 
-    def _setup(self):
-        l = np.log(self.std * self.std + 1)
-        self._mean = -l / 2
-        self._std = np.sqrt(l)
+    def _sample(self, shape):
+        return 1
 
-    def _sample_like(self, x):
-        m = torch.full_like(x, self._mean)
-        s = torch.full_like(x, self._std)
-        return torch.normal(m, s).exp()
+    def _init(_, output, target):
+        return None
+
+    def _next(m, ctx):
+        return None
+
+    def _reg_loss(m, ctx):
+        return 0
+
+
+class L2Regularization(Regularization):
+
+    def _reg_loss(m, ctx):
+        if m.on == "state":
+            assert m.state.dim() == 2
+            return (m.std**2 / 2) * m.state.square().mean(1)
+        if m.on == "weight":
+            return (m.std**2 / 2) * m.weight.square().mean(1).sum()
+        raise f"unrecognized on='{m.on}'"
+
+
+class ExpRegularization(Regularization):
+
+    def _init(_, output, target):
+        prob = F.softmax(output, dim=1)
+        jacob = torch.ones_like(prob).diag_embed()
+        return prob, jacob
+
+    def _next(m, ctx):
+        prob, jacob = ctx
+        jacob = torch.matmul(jacob, m.weight) * (m.state > 0).unsqueeze(1)
+        return prob, jacob
+
+    def _reg_loss(m, ctx):
+
+        prob, jacob = ctx
+        weight = m.weight
+        state = m.state
+
+        if m.on == "state":
+            jacob = torch.matmul(jacob, weight)
+            state_2 = state.square()
+            return m._approx(prob, jacob, state_2)
+        if m.on == "weight":
+            state_2 = torch.einsum(
+                "ij,bj->bi", weight.square(), state.square())
+            return m._approx(prob, jacob, state_2)
+        raise Exception(f"unrecognized on='{m.on}'")
+
+    def _approx(m, prob, jacob, state_2):
+        m2 = torch.einsum("bi,bij->bj", prob, jacob.square())
+        m1 = torch.einsum("bi,bij->bj", prob, jacob)
+        c2 = m2 - m1.square()
+        return (m.std**2 / 2) * torch.einsum("bi,bi->b", c2, state_2)
+
+
+'''
+m2 = torch.einsum("bi,bij->bj", prob, jacob.square())
+m1 = torch.einsum("bi,bij->bj", prob, jacob)
+c2 = m2 - m1.square()
+jacob_2 = jacob.square()
+m22 = torch.einsum("bi,bij,bik->bjk", prob, jacob_2, jacob_2)
+m21 = torch.einsum("bi,bij,bik->bjk", prob, jacob_2, jacob)
+m11 = torch.einsum("bi,bij,bik->bjk", prob, jacob, jacob)
+m20 = m2.unsqueeze(2)
+m01 = m1.unsqueeze(1)
+m01_2 = m01.square()
+c4 = (m22 - 2*addsym(m21*m01) - 2*m11.square() + 8*m11*mulsym(m01)
+        - mulsym(m20) + 2*addsym(m20*m01_2) - 6*mulsym(m01_2))
+return (
+    (m.std**2 / 2) * torch.einsum("bi,bi->b", c2, state_2) +
+    (m.std**4 / 8) * torch.einsum("bij,bi,bj->b", c4, state_2, state_2))
+
+def addsym(x):
+    return x + x.swapaxes(1, 2)
+
+def mulsym(x):
+    return x * x.swapaxes(1, 2)
+'''

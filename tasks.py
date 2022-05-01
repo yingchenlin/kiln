@@ -1,5 +1,7 @@
 import os
 import argparse
+import logging
+import traceback
 import json
 import random
 import functools
@@ -55,9 +57,9 @@ class Task:
 
         while self.epoch < self.num_epochs:
             self.epoch += 1
-
             self._train()
             self._eval()
+            self._log()
 
         self._finish()
 
@@ -67,48 +69,67 @@ class Task:
         torch.manual_seed(self.seed)
         torch.cuda.manual_seed(self.seed)
 
+        os.makedirs(self.root, exist_ok=True)
+        with open(f"{self.root}/config.json", "w")as f:
+            json.dump(self.config, f, indent=2)
+
         self.epoch = 0
         self.num_epochs = self.config["fit"]["epochs"]
+        self.logs = []
 
         self.engine.setup(self.config, self.device, self.verbose)
 
         if "source" in self.config["fit"]:
             self.engine.load_state(self.config["fit"]["source"])
 
-    def _finish(self):
-
-        os.makedirs(self.root, exist_ok=True)
-
-        with open(f"{self.root}/config.json", "w")as f:
-            json.dump(self.config, f, indent=2)
-
-        self.engine.save_state(f"{self.root}/checkpoint.pt")
-
-        with open(f"{self.root}/done", "w"):
-            pass
-
     def _train(self):
 
         dataloader = self.engine.get_dataloader(test=False)
         if self.verbose:
-            dataloader = tqdm(dataloader, ncols=100, leave=False)
+            dataloader = tqdm(dataloader, ncols=80, leave=False)
 
         for metrics in self.engine.train(dataloader):
+            outputs = self._format(metrics)
             if self.verbose:
-                dataloader.set_postfix(metrics)
+                dataloader.set_postfix(outputs)
+
+        self.train_metrics = metrics
 
     def _eval(self):
 
         dataloader = self.engine.get_dataloader(test=True)
         if self.verbose:
-            dataloader = tqdm(dataloader, ncols=100, leave=False)
+            dataloader = tqdm(dataloader, ncols=80, leave=False)
 
         for metrics in self.engine.eval(dataloader):
+            outputs = self._format(metrics)
             if self.verbose:
-                dataloader.set_postfix(metrics)
+                dataloader.set_postfix(outputs)
 
-        status = " ".join([f"{k}={v:.4g}" for k, v in metrics.items()])
-        print(f"{self.label}: epoch={self.epoch} {status}")
+        status = " ".join([f"{k}={v}" for k, v in outputs.items()])
+        logging.info(f"{self.label}: epoch={self.epoch} {status}")
+
+        self.eval_metrics = metrics
+
+    def _format(self, metrics):
+        return {k: f"{v:.4g}" for k, v in metrics.items()
+                if not k.startswith("model")}
+
+    def _log(self):
+        log = {}
+        for k, v in self.train_metrics.items():
+            log[f"train_{k}"] = v
+        for k, v in self.eval_metrics.items():
+            log[f"eval_{k}"] = v
+        self.logs.append(log)
+
+        with open(f"{self.root}/logs.json", "w")as f:
+            json.dump(self.logs, f, indent=2)
+
+    def _finish(self):
+        self.engine.save_state(f"{self.root}/checkpoint.pt")
+        with open(f"{self.root}/done", "w"):
+            pass
 
 
 def run(get_engine):
@@ -121,6 +142,11 @@ def run(get_engine):
     parser.add_argument("--device", "-d", type=str, default="cuda")
     parser.add_argument("--verbose", "-v", action="store_true", default=False)
     args = parser.parse_args()
+
+    logging.basicConfig(
+        format='[%(asctime)s] %(message)s',
+        datefmt='%H:%M:%S',
+        level=logging.INFO)
 
     # load configs
     with open(args.plan) as f:
@@ -202,11 +228,17 @@ def build_dims(plan, group, num_samples):
 
 
 def worker_fn(queue, device):
+
+    logging.basicConfig(
+        format='[%(asctime)s] %(message)s',
+        datefmt='%H:%M:%S',
+        level=logging.INFO)
+
     while True:
         task = queue.get()
         if task is None:
             break
         try:
             task(device)
-        except Exception as e:
-            print(e)
+        except Exception:
+            print(traceback.format_exc())

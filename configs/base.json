@@ -1,0 +1,40 @@
+{
+  "dataset": {
+    "name": "cifar-10",
+    "path": "datasets",
+    "train": {
+      "batch_size": 100,
+      "shuffle": true
+    },
+    "test": {
+      "batch_size": 100,
+      "shuffle": false
+    }
+  },
+  "model": {
+    "name": "mlp",
+    "num_layers": 3,
+    "hidden_dim": 200,
+    "activation": "relu",
+    "dropout": {
+      "name": "bernoulli",
+      "on": "state",
+      "std": 0,
+      "layers": []
+    }
+  },
+  "fit": {
+    "epochs": 50,
+    "samples": 1,
+    "loss_fn": {
+      "name": "ce",
+      "reduction": "none"
+    },
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "learning_rate": 1e-3,
+      "weight_decay": 0
+    }
+  }
+}

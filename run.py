@@ -43,12 +43,19 @@ class Engine:
         }, path)
 
     def _train_loss(self, input, target):
-        samples = []
+
+        losses = []
         for _ in range(self.num_samples):
+
             output = self.model(input)
-            sample = self.loss_fn(output, target) + self.model.reg_loss()
-            samples.append(sample)
-        return torch.stack(samples).mean(0)
+            loss = self.loss_fn(output, target) + \
+                self.model.reg_loss(output, target)
+
+            self.metrics.add_loss(loss)
+            self.metrics.add_state(self.model, output)
+
+            losses.append(loss)
+        return torch.stack(losses).mean(0)
 
     def train(self, dataloader):
 
@@ -64,7 +71,6 @@ class Engine:
             loss.mean().backward()
             self.optimizer.step()
 
-            self.metrics.add_loss(loss)
             yield self.metrics.get()
 
     def eval(self, dataloader):
@@ -73,6 +79,8 @@ class Engine:
         self.metrics.reset()
 
         with torch.no_grad():
+            self.metrics.add_param(self.model)
+
             for input, target in dataloader:
                 input = input.to(self.device)
                 target = target.to(self.device)
@@ -82,6 +90,7 @@ class Engine:
 
                 self.metrics.add_loss(loss)
                 self.metrics.add_rank(output, target)
+                self.metrics.add_state(self.model, output)
                 yield self.metrics.get()
 
 

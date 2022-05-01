@@ -1,8 +1,7 @@
 import numpy as np
-import torch
 import torch.nn as nn
 
-from dropouts import StatefulLayer, LinearLayer, get_dropout
+from dropouts import Regularization, get_dropout
 
 
 def get_model(dataset, config):
@@ -15,10 +14,6 @@ def get_model(dataset, config):
 def get_activation(name):
     if name == "relu":
         return nn.ReLU()
-    if name == "tanh":
-        return nn.Tanh()
-    if name == "sigmoid":
-        return nn.Sigmoid()
     raise Exception(f"unknown activation '{name}'")
 
 
@@ -35,29 +30,31 @@ class MLP(nn.Sequential):
         layers = []
         layers.append(nn.Flatten())
         for i in range(num_layers):
-            layers.extend(self.get_layers(
+            layers.append(self._get_dropout(
                 input_dim, hidden_dim, config["dropout"], i))
-            layers.append(get_activation(activation))
             input_dim = hidden_dim
-        layers.extend(self.get_layers(
+            layers.append(get_activation(activation))
+        layers.append(self._get_dropout(
             input_dim, output_dim, config["dropout"], num_layers))
-        layers.append(StatefulLayer())
 
         super().__init__(*layers)
 
-    def get_layers(self, in_dim, out_dim, config, layer):
+    def _get_dropout(self, in_dim, out_dim, config, layer):
         std = config["std"] if layer in config["layers"] else 0
-        reg = config["reg"] if layer in config["layers"] else 0
-        lock = layer in config["lock"]
-        return [
-            StatefulLayer(),
-            get_dropout(config["name"], std),
-            LinearLayer(in_dim, out_dim, reg, lock),
-        ]
+        return get_dropout(config, in_dim, out_dim, std)
 
-    def reg_loss(self):
-        reg_sum = 0
-        for m in self.modules():
-            if isinstance(m, LinearLayer):
-                reg_sum = reg_sum + m.reg_loss()
-        return reg_sum
+    def reg_loss(self, output, target):
+        reg_loss = 0
+        modules = [m for m in self.modules() if isinstance(m, Regularization)]
+        first_index = _find(modules, lambda m: m.std != 0)
+        if first_index != -1:
+            ctx = modules[first_index]._init(output, target)
+            for m in reversed(modules[first_index:]):
+                if m.std != 0:
+                    reg_loss += m._reg_loss(ctx)
+                ctx = m._next(ctx)
+        return reg_loss
+
+
+def _find(arr, predicate):
+    return next((i for i, x in enumerate(arr) if predicate(x)), -1)

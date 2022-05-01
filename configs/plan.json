@@ -1,0 +1,163 @@
+{
+  "config": "configs/base.json",
+  "groups": {
+    "scratch": {
+      "dataset": ["cifar-10"],
+      "dim": ["d200"],
+      "dropout": ["norm", "reg"],
+      "on": true,
+      "std": true,
+      "layers": true
+    }
+  },
+  "factors": {
+    "dataset": {
+      "mnist": {
+        "dataset": {
+          "name": "mnist"
+        }
+      },
+      "cifar-10": {
+        "dataset": {
+          "name": "cifar-10"
+        }
+      },
+      "cifar-100": {
+        "dataset": {
+          "name": "cifar-100"
+        }
+      },
+      "svhn": {
+        "dataset": {
+          "name": "svhn"
+        }
+      }
+    },
+    "dim": {
+      "d100": {
+        "model": {
+          "hidden_dim": 100
+        }
+      },
+      "d200": {
+        "model": {
+          "hidden_dim": 200
+        }
+      },
+      "d500": {
+        "model": {
+          "hidden_dim": 500
+        }
+      }
+    },
+    "dropout": {
+      "bern": {
+        "model": {
+          "dropout": {
+            "name": "bernoulli"
+          }
+        }
+      },
+      "norm": {
+        "model": {
+          "dropout": {
+            "name": "normal"
+          }
+        }
+      },
+      "norm8": {
+        "model": {
+          "dropout": {
+            "name": "normal"
+          }
+        },
+        "fit": {
+          "samples": 8
+        }
+      },
+      "reg": {
+        "model": {
+          "dropout": {
+            "name": "reg"
+          }
+        }
+      }
+    },
+    "on": {
+      "x": {
+        "model": {
+          "dropout": {
+            "on": "state"
+          }
+        }
+      },
+      "w": {
+        "model": {
+          "dropout": {
+            "on": "weight"
+          }
+        }
+      }
+    },
+    "std": {
+      "s1o4": {
+        "model": {
+          "dropout": {
+            "std": 0.25
+          }
+        }
+      },
+      "s1o2": {
+        "model": {
+          "dropout": {
+            "std": 0.5
+          }
+        }
+      },
+      "s1o1": {
+        "model": {
+          "dropout": {
+            "std": 1
+          }
+        }
+      }
+    },
+    "layers": {
+      "all": {
+        "model": {
+          "dropout": {
+            "layers": [1, 2, 3]
+          }
+        }
+      },
+      "l1": {
+        "model": {
+          "dropout": {
+            "layers": [1]
+          }
+        }
+      },
+      "l2": {
+        "model": {
+          "dropout": {
+            "layers": [2]
+          }
+        }
+      },
+      "l3": {
+        "model": {
+          "dropout": {
+            "layers": [3]
+          }
+        }
+      },
+      "no": {
+        "model": {
+          "dropout": {
+            "layers": []
+          }
+        }
+      }
+    }
+  }
+}
