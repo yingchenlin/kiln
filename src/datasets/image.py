@@ -1,59 +1,7 @@
 import torch
 import torchvision
-#import torchtext
 
 from functools import lru_cache
-
-
-def get_dataset(config):
-    return ImageDataset(config)
-
-
-'''
-class LanguageDataset:
-
-    UNKNOWN = "<unk>"
-
-    def __init__(self, config):
-
-        train_iter, valid_iter, test_iter = \
-            self._load_dataset(config["name"], config["path"])
-        tokenizer = self._build_tokenizer(config["tokenizer"])
-        vocab = self._build_vocab(train_iter, tokenizer)
-
-        train_data = self._index_data(train_iter, tokenizer, vocab)
-        valid_data = self._index_data(valid_iter, tokenizer, vocab)
-        test_data = self._index_data(test_iter, tokenizer, vocab)
-
-    def _build_tokenizer(self, name):
-        return torchtext.data.utils.get_tokenizer(name)
-
-    def _build_vocab(self, raw_text_iter, tokenizer):
-        vocab = torchtext.vocab.build_vocab_from_iterator(
-            map(tokenizer, raw_text_iter), specials=[LanguageDataset.UNKNOWN])
-        vocab.set_default_index(vocab[LanguageDataset.UNKNOWN])
-        return vocab
-
-    def _index_data(self, raw_text_iter, tokenizer, vocab):
-        data = [torch.tensor(vocab(tokenizer(item)), dtype=torch.long)
-                for item in raw_text_iter]
-        return torch.cat(tuple(filter(lambda t: t.numel() > 0, data)))
-
-    @lru_cache
-    def _load_dataset(self, name, path):
-        root = f"{path}/{name}"
-
-        if name == "penn":
-            return torchtext.datasets.PennTreebank(root)
-
-        if name == "wiki-2":
-            return torchtext.datasets.WikiText2(root)
-
-        if name == "wiki-103":
-            return torchtext.datasets.WikiText103(root)
-
-        raise Exception(f"unknown dataset '{name}'")
-'''
 
 
 class ImageDataset:
@@ -125,4 +73,4 @@ class ImageDataset:
                 root=root, split="test", transform=transform, download=True)
             return (input_shape, num_classes, train_set, test_set)
 
-        raise Exception(f"unknown dataset '{name}'")
+        raise Exception(f"unknown image dataset '{name}'")

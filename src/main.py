@@ -2,8 +2,7 @@ import torch
 
 from tasks import run
 from datasets import get_dataset
-from models import get_model
-from tools import get_loss_fn, get_optimizer
+from modules import get_model, get_loss_fn, get_optimizer
 from metrics import Metrics
 
 
@@ -14,13 +13,16 @@ class Engine:
         self.device = device
 
         self.dataset = get_dataset(config["dataset"])
-        self.model = get_model(self.dataset, config["model"])
+        self.model = get_model(
+            config["model"], 
+            self.dataset.input_shape, 
+            self.dataset.num_classes)
         self.model.to(self.device)
 
         self.loss_fn = get_loss_fn(config["fit"]["loss_fn"])
         self.optimizer = get_optimizer(
             config["fit"]["optimizer"], self.model.parameters())
-        self.metrics = Metrics({"topk": 1}, {"top1": lambda _: 1})
+        self.metrics = Metrics(config["metrics"])
 
         self.num_samples = config["fit"]["samples"]
 
@@ -42,33 +44,28 @@ class Engine:
             "optimizer": self.optimizer.state_dict(),
         }, path)
 
-    def _train_loss(self, input, target):
-
-        losses = []
+    def _get_train_losses(self, inputs, targets):
+        all_losses = []
         for _ in range(self.num_samples):
-
-            output = self.model(input)
-            loss = self.loss_fn(output, target) + \
-                self.model.reg_loss(output, target)
-
-            self.metrics.add_loss(loss)
-            self.metrics.add_state(self.model, output)
-
-            losses.append(loss)
-        return torch.stack(losses).mean(0)
+            outputs = self.model(inputs)
+            losses = self.loss_fn(outputs, targets)
+            self.metrics.add_losses(losses)
+            self.metrics.add_states(self.model)
+            all_losses.append(losses)
+        return torch.stack(all_losses).mean(0)
 
     def train(self, dataloader):
 
         self.model.train()
         self.metrics.reset()
 
-        for input, target in dataloader:
-            input = input.to(self.device)
-            target = target.to(self.device)
+        for inputs, targets in dataloader:
+            inputs = inputs.to(self.device)
+            targets = targets.to(self.device)
 
             self.optimizer.zero_grad()
-            loss = self._train_loss(input, target)
-            loss.mean().backward()
+            losses = self._get_train_losses(inputs, targets)
+            losses.mean().backward()
             self.optimizer.step()
 
             yield self.metrics.get()
@@ -81,16 +78,16 @@ class Engine:
         with torch.no_grad():
             self.metrics.add_param(self.model)
 
-            for input, target in dataloader:
-                input = input.to(self.device)
-                target = target.to(self.device)
+            for inputs, targets in dataloader:
+                inputs = inputs.to(self.device)
+                targets = targets.to(self.device)
 
-                output = self.model(input)
-                loss = self.loss_fn(output, target)
+                outputs = self.model(inputs)
+                losses = self.loss_fn(outputs, targets)
 
-                self.metrics.add_loss(loss)
-                self.metrics.add_rank(output, target)
-                self.metrics.add_state(self.model, output)
+                self.metrics.add_losses(losses)
+                self.metrics.add_ranks(outputs, targets)
+                self.metrics.add_states(self.model)
                 yield self.metrics.get()
 
 
