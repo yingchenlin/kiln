@@ -1,41 +1,33 @@
 {
   "dataset": {
-    "type": "event",
-    "name": "ml-1m",
+    "type": "image",
+    "name": "cifar-10",
     "path": "datasets",
-    "min_user": 20,
-    "min_item": 20,
-    "split_ratio":0.8,
     "train": {
-      "batch_size": 20,
-      "split_ratio": 0.8,
+      "batch_size": 100,
       "shuffle": true
     },
     "test": {
-      "batch_size": 20,
-      "split_ratio": 0.8,
+      "batch_size": 100,
       "shuffle": false
     }
   },
   "model": {
-    "name": "ae",
-    "embedding_dim": 50,
-    "inner": {
-      "name": "mlp",
-      "num_layers": 3,
-      "hidden_dim": 200,
-      "dropout": {
-        "name": "bernoulli",
-        "std": 0,
-        "layers": []
-      }
+    "name": "mlp",
+    "num_layers": 3,
+    "hidden_dim": 100,
+    "dropout": {
+      "name": "normal",
+      "std": 0.5,
+      "layers": [1, 2, 3]
     }
   },
   "fit": {
     "epochs": 50,
-    "samples": 1,
+    "checkpoint_interval": 0,
+    "loss_samples": 1,
     "loss_fn": {
-      "name": "multi-ce"
+      "name": "ce"
     },
     "optimizer": {
       "name": "sgd",
@@ -46,11 +38,12 @@
   },
   "metrics": {
     "ranking": {
-      "topks": [50],
-      "weights": ["recall", "ndcg", "mrr"],
+      "topks": [1],
+      "weights": ["recall"],
       "is_dist": false,
-      "is_multi": true,
-      "eps": 1e-10
+      "is_excl": false,
+      "is_multi": false,
+      "eps": 1e-8
     }
   }
 }

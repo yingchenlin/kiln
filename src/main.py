@@ -24,7 +24,7 @@ class Engine:
             config["fit"]["optimizer"], self.model.parameters())
         self.metrics = Metrics(config["metrics"])
 
-        self.num_samples = config["fit"]["samples"]
+        self.loss_samples = config["fit"]["loss_samples"]
 
         if verbose:
             print(config)
@@ -44,16 +44,6 @@ class Engine:
             "optimizer": self.optimizer.state_dict(),
         }, path)
 
-    def _get_train_losses(self, inputs, targets):
-        all_losses = []
-        for _ in range(self.num_samples):
-            outputs = self.model(inputs)
-            losses = self.loss_fn(outputs, targets)
-            self.metrics.add_losses(losses)
-            self.metrics.add_states(self.model)
-            all_losses.append(losses)
-        return torch.stack(all_losses).mean(0)
-
     def train(self, dataloader):
 
         self.model.train()
@@ -64,7 +54,16 @@ class Engine:
             targets = targets.to(self.device)
 
             self.optimizer.zero_grad()
-            losses = self._get_train_losses(inputs, targets)
+            
+            all_losses = []
+            for _ in range(self.loss_samples):
+                outputs = self.model(inputs)
+                losses = self.loss_fn(outputs, targets)
+                self.metrics.add_losses(losses)
+                self.metrics.add_states(self.model)
+                all_losses.append(losses)
+            losses = torch.stack(all_losses).mean(0)
+
             losses.mean().backward()
             self.optimizer.step()
 
@@ -86,8 +85,9 @@ class Engine:
                 losses = self.loss_fn(outputs, targets)
 
                 self.metrics.add_losses(losses)
-                self.metrics.add_ranks(outputs, targets)
+                self.metrics.add_ranks(inputs, outputs, targets)
                 self.metrics.add_states(self.model)
+
                 yield self.metrics.get()
 
 

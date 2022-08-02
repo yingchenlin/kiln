@@ -1,5 +1,6 @@
 from .ae import *
 from .mlp import *
+from .cnn import *
 from .rnn import *
 from .dropouts import *
 from .dist import *
@@ -14,8 +15,10 @@ def get_loss_fn(config):
         return CrossEntropyLoss()
     if name == "multi-ce":
         return MultiCrossEntropyLoss()
-    if name == "dist-ce":
-        return DistCrossEntropyLoss()
+    if name == "apx-ce":
+        return ApproxCrossEntropyLoss()
+    if name == "mc-ce":
+        return MonteCarloCrossEntropyLoss(config)
     raise Exception(f"unknown loss function '{name}'")
 
 

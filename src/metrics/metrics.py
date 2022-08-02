@@ -26,8 +26,8 @@ class Metrics:
     def add_losses(self, losses):
         self._add("loss", losses, p="mean")
 
-    def add_ranks(self, scores, targets):
-        for key, values in self.ranking(scores, targets):
+    def add_ranks(self, inputs, outputs, targets):
+        for key, values in self.ranking(inputs, outputs, targets):
             self._add(key, values, p="mean")
 
     def add_states(self, model):

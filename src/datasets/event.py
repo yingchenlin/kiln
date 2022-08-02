@@ -112,7 +112,7 @@ class BagOfWordDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         data = self.data[idx]
-        mask = torch.rand(data.shape) >= self.split_ratio
-        input = (data * mask).float()
-        target = data * ~mask
-        return input, target
+        masks = torch.rand(data.shape) < self.split_ratio
+        inputs = data * masks
+        targets = data * ~masks
+        return inputs, targets

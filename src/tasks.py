@@ -60,6 +60,8 @@ class Task:
             self._train()
             self._eval()
             self._log()
+            if np.isnan(self.train_metrics["loss"]):
+                break
 
         self._finish()
 
@@ -75,6 +77,7 @@ class Task:
 
         self.epoch = 0
         self.num_epochs = self.config["fit"]["epochs"]
+        self.checkpoint_interval = self.config["fit"]["checkpoint_interval"]
         self.logs = []
 
         self.engine.setup(self.config, self.device, self.verbose)
@@ -116,6 +119,7 @@ class Task:
                 if not k.startswith("model")}
 
     def _log(self):
+
         log = {}
         for k, v in self.train_metrics.items():
             log[f"train_{k}"] = v
@@ -125,6 +129,10 @@ class Task:
 
         with open(f"{self.root}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
+
+        if self.checkpoint_interval != 0 and \
+            self.epoch % self.checkpoint_interval == 0:
+            self.engine.save_state(f"{self.root}/checkpoint-{self.epoch}.pt")
 
     def _finish(self):
         self.engine.save_state(f"{self.root}/checkpoint.pt")

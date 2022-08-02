@@ -32,14 +32,14 @@ class DistReLU(nn.Module):
         z = m / sd
         g0, g1, g2 = self._gauss(z)
         mp = sd * g2
-        sp = s * self._outer(g1) + s.square() * self._outer(g0 / sd) * (np.pi/2-1)
+        sp = s * self._outer(g1) + s.square() * self._outer(g0 / sd) * (np.pi / 2 - 1)
         return mp, sp
 
     def _outer(self, x):
         return x[:, :, None] * x[:, None, :]
 
     def _gauss(self, z):
-        g0 = (z.square() * -0.5).exp() * np.sqrt(1/(np.pi*2))
+        g0 = (z.square() * -0.5).exp() * np.sqrt(1 / (np.pi * 2))
         g1 = ((z * np.sqrt(0.5)).erf() + 1) * 0.5
         g2 = z * g1 + g0
         return g0, g1, g2
@@ -68,6 +68,7 @@ class DistDropout(nn.Module):
         return s + v * sp.diag_embed()
 
 
+# approximate gaussian integral of softmax
 def agi_softmax(m, s):
     c = 1 / (np.pi * 2 * np.square(np.log(2)))
     v = s.diagonal(0, -2, -1)
@@ -78,7 +79,7 @@ def agi_softmax(m, s):
     return p
 
 
-class DistCrossEntropyFunction(torch.autograd.Function):
+class ApproxCrossEntropyFunction(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, m, s, i):
@@ -96,8 +97,28 @@ class DistCrossEntropyFunction(torch.autograd.Function):
         return grad_output[:, None] * grad, None, None
 
 
-class DistCrossEntropyLoss(nn.Module):
+class ApproxCrossEntropyLoss(nn.Module):
 
     def forward(self, input, target):
         (m, s), i = input, target
-        return DistCrossEntropyFunction.apply(m, s, i)
+        return ApproxCrossEntropyFunction.apply(m, s, i)
+
+
+class MonteCarloCrossEntropyLoss(nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+        self.num_samples = config["samples"]
+
+    def forward(self, input, target):
+        (m, s), i = input, target
+        if s == None:
+            return self._cross_entropy(m, i)
+        t, _ = torch.linalg.cholesky_ex(s)
+        u = torch.randn((self.num_samples, t.size(-1)))
+        x = m.unsqueeze(0) + torch.einsum("bij,sj->sbi", t, u)
+        ip = i.unsqueeze(0).expand(x.shape[:-1])
+        return self._cross_entropy(x, ip).mean(0)
+
+    def _cross_entropy(self, x, i, dim=-1):
+        return x.logsumexp(dim) - x.gather(dim, i.unsqueeze(dim)).squeeze(dim)

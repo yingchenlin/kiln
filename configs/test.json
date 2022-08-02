@@ -1,0 +1,45 @@
+{
+    "config": "configs/base.json",
+    "groups": {
+      "test": {
+        "test": true
+      }
+    },
+    "factors": {
+      "test": {
+        "none": {
+          "model": {
+            "dropout": {
+              "std": 0
+            }
+          }
+        },
+        "base": {
+          "fit": {
+            "checkpoint_interval": 10
+          }
+        },
+        "mean": {
+          "fit": {
+            "loss_samples": 16
+          }
+        },
+        "dist": {
+          "model": {
+            "name": "dist-mlp"
+          },
+          "fit": {
+            "loss_fn": {
+              "name": "mc-ce",
+              "samples": 1000
+            }
+          },
+          "metrics": {
+            "ranking": {
+              "is_dist": true
+            }
+          }
+        }
+      }
+    }
+  }
