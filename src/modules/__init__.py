@@ -3,7 +3,8 @@ from .mlp import *
 from .cnn import *
 from .rnn import *
 from .dropouts import *
-from .dist import *
+from .dist_cov import *
+from .dist_var import *
 from .losses import *
 
 from torch import optim
@@ -15,10 +16,12 @@ def get_loss_fn(config):
         return CrossEntropyLoss()
     if name == "multi-ce":
         return MultiCrossEntropyLoss()
-    if name == "apx-ce":
-        return ApproxCrossEntropyLoss()
-    if name == "mc-ce":
-        return MonteCarloCrossEntropyLoss(config)
+    if name == "cov-apx-ce":
+        return CovApproxCrossEntropyLoss()
+    if name == "cov-mc-ce":
+        return CovMonteCarloCrossEntropyLoss(config)
+    if name == "var-mc-ce":
+        return VarMonteCarloCrossEntropyLoss(config)
     raise Exception(f"unknown loss function '{name}'")
 
 
@@ -42,9 +45,10 @@ def get_model(config, input_shape, num_classes):
         return Autoencoder(config, input_shape, num_classes, get_model)
     if name == "mlp":
         return MLP(config, input_shape, num_classes)
-    if name == "dist-mlp":
-        return DistMLP(config, input_shape, num_classes)
+    if name == "cov-mlp":
+        return CovMLP(config, input_shape, num_classes)
+    if name == "var-mlp":
+        return VarMLP(config, input_shape, num_classes)
     if name == "lstm":
         return LSTM(config, input_shape, num_classes)
     raise Exception(f"unknown model '{name}'")
-

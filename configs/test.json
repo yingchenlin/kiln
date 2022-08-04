@@ -24,13 +24,29 @@
             "loss_samples": 16
           }
         },
-        "dist": {
+        "cov": {
           "model": {
-            "name": "dist-mlp"
+            "name": "cov-mlp"
           },
           "fit": {
             "loss_fn": {
-              "name": "mc-ce",
+              "name": "cov-mc-ce",
+              "samples": 1000
+            }
+          },
+          "metrics": {
+            "ranking": {
+              "is_dist": true
+            }
+          }
+        },
+        "var": {
+          "model": {
+            "name": "var-mlp"
+          },
+          "fit": {
+            "loss_fn": {
+              "name": "var-mc-ce",
               "samples": 1000
             }
           },
