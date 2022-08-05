@@ -31,6 +31,8 @@ class CovLinear(nn.Linear):
         m, k = input
         if k == None:
             return super().forward(m), None
+        
+        # update distribution
         w, b = self.weight.T, self.bias
         mp = m @ w + b
         kp = w.T @ k @ w
@@ -43,12 +45,18 @@ class CovReLU(nn.ReLU):
         m, k = input
         if k == None:
             return super().forward(m), None
+        
+        # retrieve attributes
         s = k.diagonal(0, 1, 2).sqrt() # standard deviation
         r = k / (outer(s) + 1e-8) # correlation coefficient
         z = m / (s + 1e-8) # inverse coefficient of variation
+
+        # compute probabilities
         g0 = std_norm_pdf(z)
         g1 = std_norm_cdf(z)
         g2 = (z * g1 + g0) # anti-devriative of std_norm_cdf
+
+        # update distribution
         mp = s * g2
         kp = k * (outer(g1) + outer(g0) * r * 0.5)
         return mp, kp
@@ -67,9 +75,13 @@ class CovDropout(nn.Module):
         m, k = input
         if self.std == 0:
             return m, k
+
+        # handle deterministic values
         v = self.std**2
         if k == None:
             return m, v * m.square().diag_embed()
+
+        # update distribution
         kd = k.diagonal(0, 1, 2) + m.square()
         return m, k + v * kd.diag_embed()
 
@@ -128,8 +140,12 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
         (m, k), i = input, target
         if k == None:
             return cross_entropy(m, i)
+
+        # sample from multivariate normal distribution
         l, _ = torch.linalg.cholesky_ex(k)
         u = torch.randn((self.num_samples, 1, l.size(-1), 1))
         x = m.unsqueeze(0) + (l.unsqueeze(0) @ u).squeeze(-1)
+
+        # expected value of cross entropy loss
         ip = i.unsqueeze(0).expand(x.shape[:-1])
         return cross_entropy(x, ip).mean(0)
