@@ -14,11 +14,7 @@
             }
           }
         },
-        "base": {
-          "fit": {
-            "checkpoint_interval": 10
-          }
-        },
+        "base": {},
         "mean": {
           "fit": {
             "loss_samples": 16

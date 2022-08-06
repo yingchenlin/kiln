@@ -2,6 +2,7 @@ import numpy as np
 from torch import nn
 
 from .dropouts import get_dropout
+from metrics import CaptureLayer
 
 
 class MLP(nn.Sequential):
@@ -9,7 +10,7 @@ class MLP(nn.Sequential):
     Flatten = nn.Flatten
     Linear = nn.Linear
     ReLU = nn.ReLU
-    Dropout = get_dropout
+    Dropout = lambda _, *args: get_dropout(*args)
 
     def __init__(self, config, input_shape, num_classes):
 
@@ -24,6 +25,7 @@ class MLP(nn.Sequential):
             layers.append(self._get_dropout(config["dropout"], i))
             layers.append(self.Linear(input_dim, hidden_dim))
             layers.append(self.ReLU())
+            layers.append(CaptureLayer(hidden_dim))
             input_dim = hidden_dim
         layers.append(self._get_dropout(config["dropout"], num_layers))
         layers.append(self.Linear(input_dim, output_dim))

@@ -115,8 +115,8 @@ class Task:
         self.eval_metrics = metrics
 
     def _format(self, metrics):
-        return {k: f"{v:.4g}" for k, v in metrics.items()
-                if not k.startswith("model")}
+        return {k: f"{v:.4g}" for k, v in metrics.items() 
+            if not k.startswith("$")}
 
     def _log(self):
 
