@@ -135,7 +135,6 @@ class Task:
             self.engine.save_state(f"{self.root}/checkpoint-{self.epoch}.pt")
 
     def _finish(self):
-        self.engine.save_state(f"{self.root}/checkpoint.pt")
         with open(f"{self.root}/done", "w"):
             pass
 

@@ -24,7 +24,7 @@
   },
   "fit": {
     "epochs": 50,
-    "checkpoint_interval": 0,
+    "checkpoint_interval": 10,
     "loss_samples": 1,
     "loss_fn": {
       "name": "ce"
