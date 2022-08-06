@@ -17,11 +17,17 @@ class CaptureLayer(nn.Module):
         self.sum_sq: torch.Tensor
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-        x = input.detach()
+
+        x = input
+        if isinstance(x, tuple):
+            x = x[0]
+        x = x.detach()
+
         self.state = x
         self.num.add_(len(x))
         self.sum.add_(x.sum(0))
         self.sum_sq.add_(torch.einsum("bi,bj->ij", x, x))
+        
         return input
 
     def train(self, mode: bool = True):

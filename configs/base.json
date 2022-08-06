@@ -17,7 +17,7 @@
     "num_layers": 3,
     "hidden_dim": 100,
     "dropout": {
-      "name": "normal",
+      "name": "bernoulli",
       "std": 0.5,
       "layers": [1, 2, 3]
     }
