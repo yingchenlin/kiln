@@ -3,9 +3,70 @@
     "groups": {
       "test": {
         "test": true
+      },
+      "layers": {
+        "layers": true
       }
     },
     "factors": {
+      "layers": {
+        "l": {
+          "model": {
+            "dropout": {
+              "layers": []
+            }
+          }
+        },
+        "l3": {
+          "model": {
+            "dropout": {
+              "layers": [3]
+            }
+          }
+        },
+        "l2": {
+          "model": {
+            "dropout": {
+              "layers": [2]
+            }
+          }
+        },
+        "l23": {
+          "model": {
+            "dropout": {
+              "layers": [2, 3]
+            }
+          }
+        },
+        "l1": {
+          "model": {
+            "dropout": {
+              "layers": [1]
+            }
+          }
+        },
+        "l13": {
+          "model": {
+            "dropout": {
+              "layers": [1, 3]
+            }
+          }
+        },
+        "l12": {
+          "model": {
+            "dropout": {
+              "layers": [1, 2]
+            }
+          }
+        },
+        "l123": {
+          "model": {
+            "dropout": {
+              "layers": [1, 2, 3]
+            }
+          }
+        }
+      },
       "test": {
         "none": {
           "model": {

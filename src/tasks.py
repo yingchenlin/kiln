@@ -38,19 +38,19 @@ class IEngine:
 
 class Task:
 
-    def __init__(self, config: dict, seed: int, label: str, verbose: bool, engine: IEngine):
+    def __init__(self, config: dict, seed: int, path: str, label: str, verbose: bool, engine: IEngine):
         self.config = config
         self.seed = seed
+        self.path = path
         self.label = label
         self.verbose = verbose
         self.engine = engine
 
     def __call__(self, device: torch.device):
 
-        self.root = f"outputs/{self.label}"
         self.device = device
 
-        if os.path.exists(f"{self.root}/done"):
+        if os.path.exists(f"{self.path}/done"):
             return
 
         self._setup()
@@ -71,8 +71,8 @@ class Task:
         torch.manual_seed(self.seed)
         torch.cuda.manual_seed(self.seed)
 
-        os.makedirs(self.root, exist_ok=True)
-        with open(f"{self.root}/config.json", "w")as f:
+        os.makedirs(self.path, exist_ok=True)
+        with open(f"{self.path}/config.json", "w")as f:
             json.dump(self.config, f, indent=2)
 
         self.epoch = 0
@@ -127,15 +127,15 @@ class Task:
             log[f"eval_{k}"] = v
         self.logs.append(log)
 
-        with open(f"{self.root}/logs.json", "w")as f:
+        with open(f"{self.path}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
 
         if self.checkpoint_interval != 0 and \
             self.epoch % self.checkpoint_interval == 0:
-            self.engine.save_state(f"{self.root}/checkpoint-{self.epoch}.pt")
+            self.engine.save_state(f"{self.path}/checkpoint-{self.epoch}.pt")
 
     def _finish(self):
-        with open(f"{self.root}/done", "w"):
+        with open(f"{self.path}/done", "w"):
             pass
 
 
@@ -146,6 +146,7 @@ def run(get_engine):
     parser.add_argument("--samples", "-s", type=int, default=1)
     parser.add_argument("--threads", "-t", type=int, default=4)
     parser.add_argument("--label", "-l", type=str, default="test")
+    parser.add_argument("--output", "-o", type=str, default="outputs")
     parser.add_argument("--device", "-d", type=str, default="cuda")
     parser.add_argument("--verbose", "-v", action="store_true", default=False)
     args = parser.parse_args()
@@ -164,7 +165,8 @@ def run(get_engine):
     # test mode
     if args.groups == "":
         seed = random.getrandbits(31)
-        task = Task(config, seed, args.label, args.verbose, get_engine())
+        path = f"{args.output}/{args.label}"
+        task = Task(config, seed, path, args.label, args.verbose, get_engine())
         device = torch.device(args.device)
         task(device)
         return
@@ -178,7 +180,8 @@ def run(get_engine):
             config_ = functools.reduce(merge, updates, config)
             label = "_".join(values)
             seed = random.getrandbits(31)
-            task = Task(config_, seed, label, args.verbose, get_engine())
+            path = f"{args.output}/{group}/{label}"
+            task = Task(config_, seed, path, label, args.verbose, get_engine())
             tasks.append(task)
 
     # spawn workers
