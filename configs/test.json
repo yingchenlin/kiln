@@ -17,10 +17,10 @@
             }
           }
         },
-        "l3": {
+        "l1": {
           "model": {
             "dropout": {
-              "layers": [3]
+              "layers": [1]
             }
           }
         },
@@ -31,17 +31,17 @@
             }
           }
         },
-        "l23": {
+        "l12": {
           "model": {
             "dropout": {
-              "layers": [2, 3]
+              "layers": [1, 2]
             }
           }
         },
-        "l1": {
+        "l3": {
           "model": {
             "dropout": {
-              "layers": [1]
+              "layers": [3]
             }
           }
         },
@@ -52,10 +52,10 @@
             }
           }
         },
-        "l12": {
+        "l23": {
           "model": {
             "dropout": {
-              "layers": [1, 2]
+              "layers": [2, 3]
             }
           }
         },
@@ -68,19 +68,6 @@
         }
       },
       "test": {
-        "none": {
-          "model": {
-            "dropout": {
-              "std": 0
-            }
-          }
-        },
-        "base": {},
-        "mean": {
-          "fit": {
-            "loss_samples": 16
-          }
-        },
         "cov": {
           "model": {
             "name": "cov-mlp"
@@ -97,6 +84,19 @@
             }
           }
         },
+        "none": {
+          "model": {
+            "dropout": {
+              "std": 0
+            }
+          }
+        },
+        "base": {},
+        "mean": {
+          "fit": {
+            "loss_samples": 16
+          }
+        },
         "var": {
           "model": {
             "name": "var-mlp"
@@ -110,6 +110,18 @@
           "metrics": {
             "ranking": {
               "is_dist": true
+            }
+          }
+        },
+        "reg": {
+          "model": {
+            "dropout": {
+              "std": 0
+            }
+          },
+          "fit": {
+            "optimizer": {
+              "weight_decay": 1e-2
             }
           }
         }

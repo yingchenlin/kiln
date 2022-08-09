@@ -9,32 +9,46 @@ class CaptureLayer(nn.Module):
 
     def __init__(self, num_features):
         super().__init__()
-        self.register_buffer("num", torch.zeros(1))
-        self.register_buffer("sum", torch.zeros(num_features))
-        self.register_buffer("sum_sq", torch.zeros(num_features, num_features))
-        self.num: torch.Tensor
-        self.sum: torch.Tensor
-        self.sum_sq: torch.Tensor
+        self.register_buffer("train_num", torch.zeros(1))
+        self.register_buffer("train_sum", torch.zeros(num_features))
+        self.register_buffer("train_sum_sq", torch.zeros(num_features, num_features))
+        self.register_buffer("eval_num", torch.zeros(1))
+        self.register_buffer("eval_sum", torch.zeros(num_features))
+        self.register_buffer("eval_sum_sq", torch.zeros(num_features, num_features))
+        self.train_num: torch.Tensor
+        self.train_sum: torch.Tensor
+        self.train_sum_sq: torch.Tensor
+        self.eval_num: torch.Tensor
+        self.eval_sum: torch.Tensor
+        self.eval_sum_sq: torch.Tensor
 
     def forward(self, input: torch.Tensor) -> torch.Tensor:
-
+        
         x = input
         if isinstance(x, tuple):
             x = x[0]
         x = x.detach()
-
         self.state = x
-        self.num.add_(len(x))
-        self.sum.add_(x.sum(0))
-        self.sum_sq.add_(torch.einsum("bi,bj->ij", x, x))
-        
+
+        num, sum, sum_sq = self._get_state(self.training)
+        num.add_(len(x))
+        sum.add_(x.sum(0))
+        sum_sq.add_(torch.einsum("bi,bj->ij", x, x))
+
         return input
 
     def train(self, mode: bool = True):
-        self.num.zero_()
-        self.sum.zero_()
-        self.sum_sq.zero_()
+        num, sum, sum_sq = self._get_state(mode)
+        num.zero_()
+        sum.zero_()
+        sum_sq.zero_()
         return super().train(mode)
+
+    def _get_state(self, mode):
+        num = self.train_num if mode else self.eval_num
+        sum = self.train_sum if mode else self.eval_sum
+        sum_sq = self.train_sum_sq if mode else self.eval_sum_sq
+        return num, sum, sum_sq
 
 
 class Metrics:

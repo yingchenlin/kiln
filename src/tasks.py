@@ -85,6 +85,8 @@ class Task:
         if "source" in self.config["fit"]:
             self.engine.load_state(self.config["fit"]["source"])
 
+        logging.info(f"{self.label}: start")
+
     def _train(self):
 
         dataloader = self.engine.get_dataloader(test=False)
@@ -137,6 +139,7 @@ class Task:
     def _finish(self):
         with open(f"{self.path}/done", "w"):
             pass
+        logging.info(f"{self.label}: finish")
 
 
 def run(get_engine):
