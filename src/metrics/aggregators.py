@@ -32,6 +32,12 @@ class MeanAggregator(Aggregator):
         return x.sum()
 
 
+class L0Aggregator(Aggregator):
+
+    def _fwd(self, x: torch.Tensor) -> torch.Tensor:
+        return (x > 0).sum()
+
+
 class L1Aggregator(Aggregator):
 
     def _fwd(self, x: torch.Tensor) -> torch.Tensor:
@@ -50,6 +56,8 @@ class L2Aggregator(Aggregator):
 def get_aggregator(name: str) -> Aggregator:
     if name == "mean":
         return MeanAggregator()
+    if name == "l0":
+        return L1Aggregator()
     if name == "l1":
         return L1Aggregator()
     if name == "l2":

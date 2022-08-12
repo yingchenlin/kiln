@@ -29,6 +29,7 @@ class MLP(nn.Sequential):
             input_dim = hidden_dim
         layers.append(self._get_dropout(config["dropout"], num_layers))
         layers.append(self.Linear(input_dim, output_dim))
+        layers.append(CaptureLayer(output_dim))
 
         super().__init__(*layers)
 

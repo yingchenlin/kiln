@@ -1,8 +1,8 @@
 {
     "config": "configs/base.json",
     "groups": {
-      "test": {
-        "test": true
+      "schemes": {
+        "schemes": true
       },
       "layers": {
         "layers": true
@@ -67,23 +67,7 @@
           }
         }
       },
-      "test": {
-        "cov": {
-          "model": {
-            "name": "cov-mlp"
-          },
-          "fit": {
-            "loss_fn": {
-              "name": "cov-mc-ce",
-              "samples": 1000
-            }
-          },
-          "metrics": {
-            "ranking": {
-              "is_dist": true
-            }
-          }
-        },
+      "schemes": {
         "none": {
           "model": {
             "dropout": {
@@ -104,6 +88,22 @@
           "fit": {
             "loss_fn": {
               "name": "var-mc-ce",
+              "samples": 1000
+            }
+          },
+          "metrics": {
+            "ranking": {
+              "is_dist": true
+            }
+          }
+        },
+        "cov": {
+          "model": {
+            "name": "cov-mlp"
+          },
+          "fit": {
+            "loss_fn": {
+              "name": "cov-mc-ce",
               "samples": 1000
             }
           },

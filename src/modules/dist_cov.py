@@ -54,7 +54,7 @@ class CovReLU(nn.ReLU):
         # compute probabilities
         g0 = std_norm_pdf(z)
         g1 = std_norm_cdf(z)
-        g2 = (z * g1 + g0) # anti-devriative of std_norm_cdf
+        g2 = z * g1 + g0 # anti-devriative of std_norm_cdf
 
         # update distribution
         mp = s * g2
