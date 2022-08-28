@@ -2,7 +2,7 @@ import numpy as np
 from torch import nn
 
 from .dropouts import get_dropout
-from metrics import CaptureLayer
+from ..metrics import CaptureLayer
 
 
 class MLP(nn.Sequential):
@@ -24,7 +24,7 @@ class MLP(nn.Sequential):
         for i in range(num_layers):
             layers.append(self._get_dropout(config["dropout"], i))
             layers.append(self.Linear(input_dim, hidden_dim))
-            layers.append(self.ReLU())
+            layers.append(self._get_activation(config["activation"], i))
             layers.append(CaptureLayer(hidden_dim))
             input_dim = hidden_dim
         layers.append(self._get_dropout(config["dropout"], num_layers))
@@ -36,3 +36,11 @@ class MLP(nn.Sequential):
     def _get_dropout(self, config, layer):
         std = config["std"] if layer in config["layers"] else 0
         return self.Dropout(config, std)
+
+    def _get_activation(self, config, layer):
+        if layer not in config["layers"]:
+            return nn.Identity()
+        name = config["name"]
+        if name == "relu":
+            return self.ReLU()
+        raise Exception(f"unrecognized activation name '{name}'")

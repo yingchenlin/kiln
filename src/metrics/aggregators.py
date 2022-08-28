@@ -57,7 +57,7 @@ def get_aggregator(name: str) -> Aggregator:
     if name == "mean":
         return MeanAggregator()
     if name == "l0":
-        return L1Aggregator()
+        return L0Aggregator()
     if name == "l1":
         return L1Aggregator()
     if name == "l2":

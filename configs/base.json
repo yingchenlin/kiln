@@ -16,6 +16,10 @@
     "name": "mlp",
     "num_layers": 3,
     "hidden_dim": 100,
+    "activation": {
+      "name": "relu",
+      "layers": [0, 1, 2]
+    },
     "dropout": {
       "name": "bernoulli",
       "std": 0.5,

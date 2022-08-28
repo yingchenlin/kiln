@@ -1,0 +1,69 @@
+{
+    "config": "configs/base.json",
+    "groups": {
+      "schemes": {
+        "schemes": true
+      }
+    },
+    "factors": {
+      "schemes": {
+        "none": {
+          "model": {
+            "dropout": {
+              "std": 0
+            }
+          }
+        },
+        "reg": {
+          "model": {
+            "dropout": {
+              "std": 0
+            }
+          },
+          "fit": {
+            "optimizer": {
+              "weight_decay": 1e-2
+            }
+          }
+        },
+        "base": {},
+        "mean": {
+          "fit": {
+            "loss_samples": 16
+          }
+        },
+        "cov": {
+          "model": {
+            "name": "cov-mlp"
+          },
+          "fit": {
+            "loss_fn": {
+              "name": "cov-mc-ce",
+              "samples": 1000
+            }
+          },
+          "metrics": {
+            "ranking": {
+              "is_dist": true
+            }
+          }
+        },
+        "var": {
+          "model": {
+            "name": "var-mlp"
+          },
+          "fit": {
+            "loss_fn": {
+              "name": "var-mc-ce",
+              "samples": 1000
+            }
+          },
+          "metrics": {
+            "ranking": {
+              "is_dist": true
+            }
+          }
+        }
+      }
+    }
+  }
