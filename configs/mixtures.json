@@ -1,9 +1,11 @@
 {
     "config": "configs/base.json",
     "groups": {
-      "mix": {
-        "dropoutLayers": ["d", "d123"],
-        "activationLayers": ["a", "a123"]
+      "mixtures": {
+        "dropoutLayers": ["d", "d2", "d123"],
+        "dropoutTargets": true,
+        "activationLayers": ["a012"],
+        "activationTypes": true
       }
     },
     "factors": {
@@ -54,6 +56,22 @@
           "model": {
             "dropout": {
               "name": "normal"
+            }
+          }
+        }
+      },
+      "dropoutTargets": {
+        "ds": {
+          "model": {
+            "dropout": {
+              "on": "state"
+            }
+          }
+        },
+        "dw": {
+          "model": {
+            "dropout": {
+              "on": "weight"
             }
           }
         }

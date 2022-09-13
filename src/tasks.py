@@ -234,7 +234,7 @@ def build_dims(plan, group, num_samples):
         elif value is True:
             dims.append(dim.items())
 
-    samples = {f"{i+1}": {} for i in range(num_samples)}
+    samples = {f"{i}": {} for i in range(num_samples)}
     dims.append(samples.items())
 
     return dims

@@ -23,6 +23,7 @@
     "dropout": {
       "name": "bernoulli",
       "std": 0.5,
+      "on": "state",
       "layers": [1, 2, 3]
     }
   },

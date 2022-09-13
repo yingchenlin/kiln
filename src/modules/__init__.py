@@ -16,8 +16,8 @@ def get_loss_fn(config):
         return CrossEntropyLoss()
     if name == "multi-ce":
         return MultiCrossEntropyLoss()
-    if name == "cov-apx-ce":
-        return CovApproxCrossEntropyLoss()
+    if name == "cov-quad-ce":
+        return CovQuadraticCrossEntropyLoss()
     if name == "cov-mc-ce":
         return CovMonteCarloCrossEntropyLoss(config)
     if name == "var-mc-ce":

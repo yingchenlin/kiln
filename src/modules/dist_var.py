@@ -69,7 +69,7 @@ class VarMLP(MLP):
 
     Flatten = DistFlatten
     Linear = VarLinear
-    ReLU = VarReLU
+    Activation = VarReLU
     Dropout = VarDropout
 
 
@@ -91,3 +91,15 @@ class VarMonteCarloCrossEntropyLoss(nn.Module):
         # expected value of cross entropy loss
         ip = i.unsqueeze(0).expand(x.shape[:-1])
         return cross_entropy(x, ip).mean(0)
+
+
+class VarQuadraticCrossEntropyLoss(nn.Module):
+
+    def forward(self, input, target):
+        (m, k), i = input, target
+        quad_term = 0
+        if k != None:
+            p = m.softmax(-1)
+            h = p * (1 - p)
+            quad_term = (p * (1 - p) * k).sum(-1) * 0.5
+        return cross_entropy(m, i) + quad_term

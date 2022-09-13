@@ -59,6 +59,7 @@ class Engine:
             for _ in range(self.loss_samples):
                 outputs = self.model(inputs)
                 losses = self.loss_fn(outputs, targets)
+                losses = losses + self.model.reg_loss()
                 self.metrics.add_states(self.model)
                 self.metrics.add_losses(losses)
                 all_losses.append(losses)

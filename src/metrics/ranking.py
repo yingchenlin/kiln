@@ -13,13 +13,12 @@ class Ranking:
     def __init__(self, config):
         self.topks = config["topks"]
         self.weights = config["weights"]
-        self.is_dist = config["is_dist"]
         self.is_excl = config["is_excl"]
         self.is_multi = config["is_multi"]
         self.eps = config["eps"]
 
     def __call__(self, inputs, outputs, targets):
-        if self.is_dist:
+        if isinstance(outputs, tuple):
             outputs = outputs[0]
         if self.is_excl:
             neg_inf = torch.tensor([-torch.inf])

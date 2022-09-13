@@ -1,69 +1,63 @@
 {
-    "config": "configs/base.json",
-    "groups": {
-      "schemes": {
-        "schemes": true
-      }
+  "config": "configs/base.json",
+  "groups": {
+    "schemes": {
+      "schemes": true,
+      "layers": ["all"]
     },
-    "factors": {
-      "schemes": {
-        "none": {
-          "model": {
-            "dropout": {
-              "std": 0
-            }
-          }
-        },
-        "reg": {
-          "model": {
-            "dropout": {
-              "std": 0
-            }
-          },
-          "fit": {
-            "optimizer": {
-              "weight_decay": 1e-2
-            }
-          }
-        },
-        "base": {},
-        "mean": {
-          "fit": {
-            "loss_samples": 16
-          }
-        },
-        "cov": {
-          "model": {
-            "name": "cov-mlp"
-          },
-          "fit": {
-            "loss_fn": {
-              "name": "cov-mc-ce",
-              "samples": 1000
-            }
-          },
-          "metrics": {
-            "ranking": {
-              "is_dist": true
-            }
-          }
-        },
-        "var": {
-          "model": {
-            "name": "var-mlp"
-          },
-          "fit": {
-            "loss_fn": {
-              "name": "var-mc-ce",
-              "samples": 1000
-            }
-          },
-          "metrics": {
-            "ranking": {
-              "is_dist": true
-            }
-          }
-        }
-      }
+    "lin-apx": {
+      "schemes": ["lin-apx"],
+      "lin-apx": true
+    },
+    "l2s": {
+      "schemes": ["l2s"],
+      "l2s": true
+    },
+    "l2w": {
+      "schemes": ["l2w"],
+      "l2w": true
+    }
+  },
+  "factors": {
+    "layers": {
+      "all": {},
+      "l1": {"model": {"dropout": {"layers": [1]}}},
+      "l2": {"model": {"dropout": {"layers": [2]}}},
+      "l3": {"model": {"dropout": {"layers": [3]}}}
+    },
+    "schemes": {
+      "base": {},
+      "none": {"model": {"dropout": {"std": 0}}},
+      "mean": {"fit": {"loss_samples": 16}},
+      "weight": {"model": {"dropout": {"on": "weight", "layers": [0, 1, 2]}}},
+      "normal": {"model": {"dropout": {"name": "normal"}}},
+      "lin-apx": {"model": {"dropout": {"name": "lin-apx"}}},
+      "cov-mc": {"model": {"name": "cov-mlp"}, "fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}},
+      "cov-quad": {"model": {"name": "cov-mlp"}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
+      "l2s": {"model": {"dropout": {"name": "l2", "on": "state", "std": 2e-5}}},
+      "l2w": {"model": {"dropout": {"name": "l2", "on": "weight", "std": 1e-2}}}
+    },
+    "lin-apx": {
+      "0": {"model": {"dropout": {"std": 0}}},
+      "1.5": {"model": {"dropout": {"std": 1.5}}},
+      "1.0": {"model": {"dropout": {"std": 1.0}}},
+      "0.5": {"model": {"dropout": {"std": 0.5}}}
+    },
+    "l2s": {
+      "0": {"model": {"dropout": {"std": 0}}},
+      "1e-4": {"model": {"dropout": {"std": 1e-4}}},
+      "5e-5": {"model": {"dropout": {"std": 5e-5}}},
+      "2e-5": {"model": {"dropout": {"std": 2e-5}}},
+      "1e-5": {"model": {"dropout": {"std": 1e-5}}},
+      "5e-6": {"model": {"dropout": {"std": 5e-6}}}
+    },
+    "l2w": {
+      "0": {"model": {"dropout": {"std": 0}}},
+      "5e-2": {"model": {"dropout": {"std": 5e-2}}},
+      "2e-2": {"model": {"dropout": {"std": 2e-2}}},
+      "1e-2": {"model": {"dropout": {"std": 1e-2}}},
+      "5e-3": {"model": {"dropout": {"std": 5e-3}}},
+      "2e-3": {"model": {"dropout": {"std": 2e-3}}}
     }
   }
+}

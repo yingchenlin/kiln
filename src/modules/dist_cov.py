@@ -25,20 +25,6 @@ class DistFlatten(nn.Flatten):
         return super().forward(input), None
 
 
-class CovLinear(nn.Linear):
-
-    def forward(self, input):
-        m, k = input
-        if k == None:
-            return super().forward(m), None
-        
-        # update distribution
-        w, b = self.weight.T, self.bias
-        mp = m @ w + b
-        kp = w.T @ k @ w
-        return mp, kp
-
-
 class CovReLU(nn.ReLU):
 
     def forward(self, input):
@@ -62,72 +48,49 @@ class CovReLU(nn.ReLU):
         return mp, kp
 
 
-class CovDropout(nn.Module):
+class CovDropout(nn.Linear):
 
-    def __init__(self, config, std):
-        super().__init__()
+    def __init__(self, config, in_dim, out_dim, std):
+        super().__init__(in_dim, out_dim)
         self.std = std
+        self.in_dim = in_dim
+        self.out_dim = out_dim
 
     def extra_repr(self):
-        return f"std={self.std}"
+        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std}"
 
     def forward(self, input):
         m, k = input
-        if self.std == 0:
-            return m, k
+        m, k = self._dropout(m, k)
+        m, k = self._linear(m, k)
+        return m, k
 
-        # handle deterministic values
+    def _dropout(self, m, k):
         v = self.std**2
-        if k == None:
-            return m, v * m.square().diag_embed()
+        if v == 0:
+            kp = k
+        elif k == None:
+            kp = v * m.square().diag_embed()
+        else:
+            d = k.diagonal(0, 1, 2) + m.square()
+            kp = k + v * d.diag_embed()
+        return m, kp
 
-        # update distribution
-        kd = k.diagonal(0, 1, 2) + m.square()
-        return m, k + v * kd.diag_embed()
+    def _linear(self, m, k):
+        mp = super().forward(m)
+        if k == None:
+            kp = None
+        else:
+            w = self.weight
+            kp = w @ k @ w.T
+        return mp, kp
 
 
 class CovMLP(MLP):
 
     Flatten = DistFlatten
-    Linear = CovLinear
-    ReLU = CovReLU
+    Activation = CovReLU
     Dropout = CovDropout
-
-
-# approximate gaussian integral of softmax
-def agi_softmax(m, k):
-    c = 1 / (np.pi * 2 * np.square(np.log(2)))
-    v = k.diagonal(0, -2, -1)
-    dm = m.unsqueeze(-2) - m.unsqueeze(-1)
-    ds = v.unsqueeze(-2) + v.unsqueeze(-1) - 2 * k
-    z = dm / (1 + c * ds).sqrt()
-    p = 1 / z.exp().sum(-1)
-    return p
-
-
-class CovApproxCrossEntropyFunction(torch.autograd.Function):
-
-    @staticmethod
-    def forward(ctx, m, k, i):
-        ctx.save_for_backward(m, k, i)
-        return F.cross_entropy(m, i, reduction="none")
-
-    @staticmethod
-    def backward(ctx, grad_output):
-        m, k, i = ctx.saved_tensors
-        if k == None:
-            p = m.softmax(-1)
-        else:
-            p = agi_softmax(m, k)
-        grad = p - F.one_hot(i, m.shape[-1])
-        return grad_output[:, None] * grad, None, None
-
-
-class CovApproxCrossEntropyLoss(nn.Module):
-
-    def forward(self, input, target):
-        (m, k), i = input, target
-        return CovApproxCrossEntropyFunction.apply(m, k, i)
 
 
 class CovMonteCarloCrossEntropyLoss(nn.Module):
@@ -149,3 +112,15 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
         # expected value of cross entropy loss
         ip = i.unsqueeze(0).expand(x.shape[:-1])
         return cross_entropy(x, ip).mean(0)
+
+
+class CovQuadraticCrossEntropyLoss(nn.Module):
+
+    def forward(self, input, target):
+        (m, k), i = input, target
+        quad_term = 0
+        if k != None:
+            p = m.softmax(-1)
+            h = p.diag_embed(0, -2, -1) - p.unsqueeze(-1) * p.unsqueeze(-2)
+            quad_term = torch.einsum("bij,bij->b", k, h) * 0.5
+        return cross_entropy(m, i) + quad_term
