@@ -27,24 +27,44 @@ class DistFlatten(nn.Flatten):
 
 class CovReLU(nn.ReLU):
 
+    def __init__(self, config):
+        super().__init__()
+        self.biased = config["biased"]
+        self.order = config["order"]
+
+    def extra_repr(self):
+        return f"bias={self.bias} order={self.order}"
+
     def forward(self, input):
         m, k = input
         if k == None:
             return super().forward(m), None
-        
-        # retrieve attributes
-        s = k.diagonal(0, 1, 2).sqrt() # standard deviation
-        r = k / (outer(s) + 1e-8) # correlation coefficient
-        z = m / (s + 1e-8) # inverse coefficient of variation
+            
+        if self.biased or self.order > 0:
+    
+            # retrieve attributes
+            s = k.diagonal(0, 1, 2).sqrt() # standard deviation
+            r = k / (outer(s) + 1e-8) # correlation coefficient
+            z = m / (s + 1e-8) # inverse coefficient of variation
 
-        # compute probabilities
-        g0 = std_norm_pdf(z)
-        g1 = std_norm_cdf(z)
-        g2 = z * g1 + g0 # anti-devriative of std_norm_cdf
+            # compute probabilities
+            g0 = std_norm_pdf(z)
+            g1 = std_norm_cdf(z)
+            g2 = z * g1 + g0 # anti-devriative of std_norm_cdf
 
         # update distribution
-        mp = s * g2
-        kp = k * (outer(g1) + outer(g0) * r * 0.5)
+        if self.biased:
+            mp = s * g2
+        else:
+            mp = super().forward(m)
+        if self.order == 0:
+            kp = k * outer(m > 0)
+        elif self.order == 1:
+            kp = k * outer(g1)
+        elif self.order == 2:
+            kp = k * (outer(g1) + outer(g0) * r * 0.5)
+        else:
+            raise Exception(f"unsupported order '{self.order}'")
         return mp, kp
 
 
@@ -55,9 +75,10 @@ class CovDropout(nn.Linear):
         self.std = std
         self.in_dim = in_dim
         self.out_dim = out_dim
+        self.linear = config["linear"]
 
     def extra_repr(self):
-        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std}"
+        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std} linear={self.linear}"
 
     def forward(self, input):
         m, k = input
@@ -66,11 +87,13 @@ class CovDropout(nn.Linear):
         return m, k
 
     def _dropout(self, m, k):
-        v = self.std**2
+        v = self.std ** 2
         if v == 0:
             kp = k
         elif k == None:
             kp = v * m.square().diag_embed()
+        elif self.linear:
+            kp = k + v * m.square().diag_embed()
         else:
             d = k.diagonal(0, 1, 2) + m.square()
             kp = k + v * d.diag_embed()

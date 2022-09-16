@@ -1,23 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 from .dist_cov import *
 from .mlp import MLP
-
-
-class VarLinear(nn.Linear):
-
-    def forward(self, input):
-        m, k = input
-        if k == None:
-            return super().forward(m), None
-
-        # update distribution
-        w, b = self.weight.T, self.bias
-        mp = m @ w + b
-        vp = k @ w.square()
-        return mp, vp
 
 
 class VarReLU(nn.ReLU):
@@ -42,17 +27,24 @@ class VarReLU(nn.ReLU):
         return mp, kp
 
 
-class VarDropout(nn.Module):
+class VarDropout(nn.Linear):
 
-    def __init__(self, config, std):
-        super().__init__()
+    def __init__(self, config, in_dim, out_dim, std):
+        super().__init__(in_dim, out_dim)
         self.std = std
+        self.in_dim = in_dim
+        self.out_dim = out_dim
 
     def extra_repr(self):
-        return f"std={self.std}"
+        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std}"
 
     def forward(self, input):
         m, k = input
+        m, k = self._dropout(m, k)
+        m, k = self._linear(m, k)
+        return m, k
+
+    def _dropout(self, m, k):
         if self.std == 0:
             return m, k
         
@@ -63,12 +55,30 @@ class VarDropout(nn.Module):
 
         # update distribution
         return m, k + v * (m.square() + k)
+    
+    def _linear(self, m, k):
+        if k == None:
+            return super().forward(m), None
+
+        # update distribution
+        w, b = self.weight.T, self.bias
+        mp = m @ w + b
+        vp = k @ w.square()
+        return mp, vp
+
+    def _linear(self, m, k):
+        mp = super().forward(m)
+        if k == None:
+            kp = None
+        else:
+            w = self.weight
+            kp = k @ w.square()
+        return mp, kp
 
 
 class VarMLP(MLP):
 
     Flatten = DistFlatten
-    Linear = VarLinear
     Activation = VarReLU
     Dropout = VarDropout
 
