@@ -33,15 +33,15 @@ class DropoutBase(nn.Linear):
         w, b = self.weight, self.bias
         if self.training:
             if self.on == "state":
-                x = x * self._sample(x.shape)
+                x = x * self._sample(x.shape, x.device)
             if self.on == "weight":
-                w = w * self._sample(w.shape)
+                w = w * self._sample(w.shape, w.device)
         return x @ w.T + b
 
     def _setup(self):
         pass
 
-    def _sample(self, shape):
+    def _sample(self, shape, device):
         raise Exception("unimplemented method")
 
 
@@ -50,8 +50,8 @@ class BernoulliDropout(DropoutBase):
     def _setup(self):
         self._prob = 1 / (self.std * self.std + 1)
 
-    def _sample(self, shape):
-        p = torch.full(shape, self._prob, device=self.device)
+    def _sample(self, shape, device):
+        p = torch.full(shape, self._prob, device=device)
         return torch.bernoulli(p) / self._prob
 
 
@@ -62,14 +62,14 @@ class UniformDropout(DropoutBase):
         self._scale = r * 2
         self._shift = 1 - r
 
-    def _sample(self, shape):
-        return torch.rand(shape, device=self.device) * self._scale + self._shift
+    def _sample(self, shape, device):
+        return torch.rand(shape, device=device) * self._scale + self._shift
 
 
 class NormalDropout(DropoutBase):
 
-    def _sample(self, shape):
-        return torch.randn(shape, device=self.device) * self.std + 1
+    def _sample(self, shape, device):
+        return torch.randn(shape, device=device) * self.std + 1
 
 
 class Regularization(DropoutBase):
