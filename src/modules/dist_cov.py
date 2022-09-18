@@ -129,7 +129,7 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
 
         # sample from multivariate normal distribution
         l, _ = torch.linalg.cholesky_ex(k)
-        u = torch.randn((self.num_samples, 1, l.size(-1), 1))
+        u = torch.randn((self.num_samples, 1, l.size(-1), 1), device=l.device)
         x = m.unsqueeze(0) + (l.unsqueeze(0) @ u).squeeze(-1)
 
         # expected value of cross entropy loss

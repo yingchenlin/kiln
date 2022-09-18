@@ -95,7 +95,7 @@ class VarMonteCarloCrossEntropyLoss(nn.Module):
             return cross_entropy(m, i)
         
         # sample from independent normal distributions
-        u = torch.randn((self.num_samples, 1, k.size(-1)))
+        u = torch.randn((self.num_samples, 1, k.size(-1)), device=k.device)
         x = m.unsqueeze(0) + k.unsqueeze(0).sqrt() * u
 
         # expected value of cross entropy loss
