@@ -75,10 +75,10 @@ class CovDropout(nn.Linear):
         self.std = std
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.linear = config["linear"]
+        self.cross = config["cross"]
 
     def extra_repr(self):
-        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std} linear={self.linear}"
+        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std} cross={self.cross}"
 
     def forward(self, input):
         m, k = input
@@ -92,7 +92,7 @@ class CovDropout(nn.Linear):
             kp = k
         elif k == None:
             kp = v * m.square().diag_embed()
-        elif self.linear:
+        elif not self.cross:
             kp = k + v * m.square().diag_embed()
         else:
             d = k.diagonal(0, 1, 2) + m.square()

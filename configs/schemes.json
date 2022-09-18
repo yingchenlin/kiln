@@ -9,6 +9,13 @@
       "schemes": ["lin-apx"],
       "lin-apx": true
     },
+    "cov": {
+      "schemes": ["cov"],
+      "cov-loss": ["mc"],
+      "cov-biased": true,
+      "cov-order": ["o2"],
+      "cov-cross": true
+    },
     "l2s": {
       "schemes": ["l2s"],
       "l2s": true
@@ -31,18 +38,30 @@
       "mean": {"fit": {"loss_samples": 16}},
       "weight": {"model": {"dropout": {"on": "weight", "layers": [0, 1, 2]}}},
       "normal": {"model": {"dropout": {"name": "normal"}}},
+      "cov": {
+        "model": {"name": "cov-mlp", "activation": {"biased": true, "order": 2}, "dropout": {"interaction": true}}, 
+        "fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}
+      },
       "lin-apx": {"model": {"dropout": {"name": "lin-apx"}}},
-      "cov-mc": {"model": {"name": "cov-mlp", "activation": {"biased": true, "order": 2}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}},
-      "cov-quad": {"model": {"name": "cov-mlp", "activation": {"biased": true, "order": 2}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-o1": {"model": {"name": "cov-mlp", "activation": {"biased": true, "order": 1}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o0": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 0}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o0-l1": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 0}, "dropout": {"linear": true}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o1": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 1}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o1-l1": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 1}, "dropout": {"linear": true}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o2": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 2}, "dropout": {"linear": false}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
-      "cov-quad-b0-o2-l1": {"model": {"name": "cov-mlp", "activation": {"biased": false, "order": 2}, "dropout": {"linear": true}}, "fit": {"loss_fn": {"name": "cov-quad-ce"}}},
       "l2s": {"model": {"dropout": {"name": "l2", "on": "state", "std": 2e-5}}},
       "l2w": {"model": {"dropout": {"name": "l2", "on": "weight", "std": 1e-2}}}
+    },
+    "cov-loss": {
+      "mc": {"fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}},
+      "quad": {"fit": {"loss_fn": {"name": "cov-quad-ce"}}}
+    },
+    "cov-order": {
+      "o0": {"model": {"activation": {"order": 0}}},
+      "o1": {"model": {"activation": {"order": 1}}},
+      "o2": {"model": {"activation": {"order": 2}}}
+    },
+    "cov-biased": {
+      "b0": {"model": {"activation": {"biased": false}}},
+      "b1": {"model": {"activation": {"biased": true}}}
+    },
+    "cov-cross": {
+      "c0": {"model": {"dropout": {"cross": false}}},
+      "c1": {"model": {"dropout": {"cross": true}}}
     },
     "lin-apx": {
       "0": {"model": {"dropout": {"std": 0}}},

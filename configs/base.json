@@ -28,7 +28,7 @@
     }
   },
   "fit": {
-    "epochs": 50,
+    "epochs": 10,
     "checkpoint_interval": 10,
     "loss_samples": 1,
     "loss_fn": {
