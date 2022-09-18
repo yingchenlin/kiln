@@ -1,9 +1,9 @@
 import torch
 
-from .tasks import run
-from .datasets import get_dataset
-from .modules import get_model, get_loss_fn, get_optimizer
-from .metrics import Metrics
+from tasks import run
+from datasets import get_dataset
+from modules import get_model, get_loss_fn, get_optimizer
+from metrics import Metrics
 
 
 class Engine:

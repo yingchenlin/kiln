@@ -2,7 +2,7 @@ import numpy as np
 from torch import nn
 
 from .dropouts import Regularization, get_dropout
-from ..metrics import CaptureLayer
+from metrics import CaptureLayer
 
 
 def get_activation(config):
