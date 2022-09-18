@@ -33,7 +33,7 @@ class CovReLU(nn.ReLU):
         self.order = config["order"]
 
     def extra_repr(self):
-        return f"bias={self.bias} order={self.order}"
+        return f"biased={self.biased} order={self.order}"
 
     def forward(self, input):
         m, k = input
