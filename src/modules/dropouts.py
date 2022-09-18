@@ -51,7 +51,7 @@ class BernoulliDropout(DropoutBase):
         self._prob = 1 / (self.std * self.std + 1)
 
     def _sample(self, shape):
-        p = torch.full(shape, self._prob)
+        p = torch.full(shape, self._prob, device=self.device)
         return torch.bernoulli(p) / self._prob
 
 
@@ -63,13 +63,13 @@ class UniformDropout(DropoutBase):
         self._shift = 1 - r
 
     def _sample(self, shape):
-        return torch.rand(shape) * self._scale + self._shift
+        return torch.rand(shape, device=self.device) * self._scale + self._shift
 
 
 class NormalDropout(DropoutBase):
 
     def _sample(self, shape):
-        return torch.randn(shape) * self.std + 1
+        return torch.randn(shape, device=self.device) * self.std + 1
 
 
 class Regularization(DropoutBase):
