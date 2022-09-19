@@ -12,7 +12,7 @@
     "cov": {
       "schemes": ["cov"],
       "cov-loss": ["mc"],
-      "cov-biased": true,
+      "cov-biased": ["b0"],
       "cov-order": ["o2"],
       "cov-cross": true
     },

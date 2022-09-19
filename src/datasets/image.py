@@ -1,7 +1,16 @@
 import torch
 import torchvision
+import torch.multiprocessing as mp
 
 from functools import lru_cache
+
+
+def synced(func):
+    lock = mp.Lock()
+    def synced_func(*args, **kws):
+        with lock:
+            return func(*args, **kws)
+    return synced_func
 
 
 class ImageDataset:
@@ -29,6 +38,7 @@ class ImageDataset:
         return transform
 
     @staticmethod
+    @synced
     @lru_cache
     def _load_dataset(name, path):
         root = f"{path}/{name}"

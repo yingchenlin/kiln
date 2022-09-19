@@ -35,7 +35,7 @@ class AggregateLayer(nn.Module):
 
 class CaptureLayer(nn.Module):
 
-    def __init__(self, num_features):
+    def __init__(self, num_features, num_classes):
         super().__init__()
         self.train_agg = AggregateLayer(num_features)
         self.test_agg = AggregateLayer(num_features)
