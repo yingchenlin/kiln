@@ -188,13 +188,13 @@ def run(get_engine):
             tasks.append(task)
 
     # spawn workers
+    mp.set_start_method("spawn")
     queue = mp.Queue()
     workers = []
+    devices = [torch.device("cpu")]
     if torch.cuda.is_available():
         num_devices = torch.cuda.device_count()
         devices = [torch.device(i) for i in range(num_devices)]
-    else:
-        devices = [torch.device("cpu")]
     for device in devices:
         for _ in range(args.threads):
             worker_args = (queue, device)
