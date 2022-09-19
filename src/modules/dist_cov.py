@@ -39,9 +39,9 @@ class CovReLU(nn.ReLU):
         m, k = input
         if k == None:
             return super().forward(m), None
-            
+
         if self.biased or self.order > 0:
-    
+
             # retrieve attributes
             s = k.diagonal(0, 1, 2).sqrt() # standard deviation
             r = k / (outer(s) + 1e-8) # correlation coefficient

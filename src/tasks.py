@@ -165,7 +165,7 @@ def run(get_engine):
     with open(plan["config"]) as f:
         config = json.load(f)
 
-    # test mode
+    # single-threaded mode
     if args.groups == "":
         seed = random.getrandbits(31)
         path = f"{args.output}/{args.label}"
