@@ -110,6 +110,5 @@ class VarQuadraticCrossEntropyLoss(nn.Module):
         quad_term = 0
         if k != None:
             p = m.softmax(-1)
-            h = p * (1 - p)
             quad_term = (p * (1 - p) * k).sum(-1) * 0.5
         return cross_entropy(m, i) + quad_term
