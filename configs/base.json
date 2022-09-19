@@ -2,7 +2,7 @@
   "dataset": {
     "type": "image",
     "name": "cifar-10",
-    "path": "datastores/kiln-image",
+    "path": "datasets",
     "train": {
       "batch_size": 100,
       "shuffle": true
