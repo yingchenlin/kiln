@@ -2,21 +2,19 @@ import torch
 import torchtext
 import os
 
-from functools import lru_cache
-
 
 class TextDataset:
 
     UNKNOWN = "<unk>"
 
-    def __init__(self, config):
+    def __init__(self, config, path):
 
-        path = self._get_state_path(config)
-        if os.path.exists(path):
-            self._load(path)
+        state_path = self._get_state_path(config, path)
+        if os.path.exists(state_path):
+            self._load(state_path)
         else:
             self._setup(config)
-            self._save(path)
+            self._save(state_path)
 
         self.input_size = ()
         self.num_classes = len(self.vocab)
@@ -24,9 +22,8 @@ class TextDataset:
         self.valid_loader = SequenceDataset(config["test"], self.valid_data)
         self.test_loader = SequenceDataset(config["test"], self.test_data)
 
-    def _get_state_path(self, config):
+    def _get_state_path(self, config, path):
         name = config["name"]
-        path = config["path"]
         tokenizer = config["tokenizer"]
         return f"{path}/{name}/cache-{tokenizer}.pt"
 
@@ -53,7 +50,7 @@ class TextDataset:
 
         # load corpus
         train_iter, valid_iter, test_iter = \
-            self._load_dataset(config["name"], config["path"])
+            TextDataset._load_dataset(config["name"], config["path"])
 
         # build tokenizer
         tokenizer = torchtext.data.utils.get_tokenizer(config["tokenizer"])
@@ -75,8 +72,8 @@ class TextDataset:
             all_tokens.extend(tokens)
         return torch.tensor(all_tokens, dtype=torch.long)
 
-    @lru_cache
-    def _load_dataset(self, name, path):
+    @staticmethod
+    def _load_dataset(name, path):
         root = f"{path}/{name}"
         if name == "penn":
             return torchtext.datasets.PennTreebank(root)

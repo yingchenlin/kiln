@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader
 
 class IEngine:
 
-    def setup(self, config: dict, device: torch.device, verbose: bool) -> None:
+    def setup(self, config: dict, output_path: str, dataset_path: str, device: torch.device, verbose: bool) -> None:
         pass
 
     def get_dataloader(self, test: bool) -> DataLoader:
@@ -38,10 +38,16 @@ class IEngine:
 
 class Task:
 
-    def __init__(self, config: dict, seed: int, path: str, label: str, verbose: bool, engine: IEngine):
+    def __init__(self, 
+        config: dict, seed: int, 
+        output_path: str, dataset_path: str, 
+        label: str, verbose: bool,
+        engine: IEngine,
+    ):
         self.config = config
         self.seed = seed
-        self.path = path
+        self.output_path = output_path
+        self.dataset_path = dataset_path
         self.label = label
         self.verbose = verbose
         self.engine = engine
@@ -50,7 +56,7 @@ class Task:
 
         self.device = device
 
-        if os.path.exists(f"{self.path}/done"):
+        if os.path.exists(f"{self.output_path}/done"):
             return
 
         self._setup()
@@ -71,8 +77,8 @@ class Task:
         torch.manual_seed(self.seed)
         torch.cuda.manual_seed(self.seed)
 
-        os.makedirs(self.path, exist_ok=True)
-        with open(f"{self.path}/config.json", "w")as f:
+        os.makedirs(self.output_path, exist_ok=True)
+        with open(f"{self.output_path}/config.json", "w")as f:
             json.dump(self.config, f, indent=2)
 
         self.epoch = 0
@@ -80,7 +86,7 @@ class Task:
         self.checkpoint_interval = self.config["fit"]["checkpoint_interval"]
         self.logs = []
 
-        self.engine.setup(self.config, self.device, self.verbose)
+        self.engine.setup(self.config, self.dataset_path, self.device, self.verbose)
 
         if "source" in self.config["fit"]:
             self.engine.load_state(self.config["fit"]["source"])
@@ -129,15 +135,16 @@ class Task:
             log[f"eval_{k}"] = v
         self.logs.append(log)
 
-        with open(f"{self.path}/logs.json", "w")as f:
+        with open(f"{self.output_path}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
 
         if self.checkpoint_interval != 0 and \
             self.epoch % self.checkpoint_interval == 0:
-            self.engine.save_state(f"{self.path}/checkpoint-{self.epoch}.pt")
+            self.engine.save_state(
+                f"{self.output_path}/checkpoint-{self.epoch}.pt")
 
     def _finish(self):
-        with open(f"{self.path}/done", "w"):
+        with open(f"{self.output_path}/done", "w"):
             pass
         logging.info(f"{self.label}: finish")
 
@@ -150,6 +157,7 @@ def run(get_engine):
     parser.add_argument("--threads", "-t", type=int, default=4)
     parser.add_argument("--label", "-l", type=str, default="test")
     parser.add_argument("--output", "-o", type=str, default="outputs")
+    parser.add_argument("--dataset", "-D", type=str, default="datasets")
     parser.add_argument("--device", "-d", type=str, default="cuda")
     parser.add_argument("--verbose", "-v", action="store_true", default=False)
     args = parser.parse_args()
@@ -168,8 +176,9 @@ def run(get_engine):
     # single-threaded mode
     if args.groups == "":
         seed = random.getrandbits(31)
-        path = f"{args.output}/{args.label}"
-        task = Task(config, seed, path, args.label, args.verbose, get_engine())
+        output_path = f"{args.output}/{args.label}"
+        task = Task(config, seed, output_path, args.dataset,
+            args.label, args.verbose, get_engine())
         device = torch.device(args.device)
         task(device)
         return
@@ -183,8 +192,9 @@ def run(get_engine):
             config_ = functools.reduce(merge, updates, config)
             label = "_".join(values)
             seed = random.getrandbits(31)
-            path = f"{args.output}/{group}/{label}"
-            task = Task(config_, seed, path, label, args.verbose, get_engine())
+            output_path = f"{args.output}/{group}/{label}"
+            task = Task(config_, seed, output_path, args.dataset,
+                label, args.verbose, get_engine())
             tasks.append(task)
 
     # spawn workers

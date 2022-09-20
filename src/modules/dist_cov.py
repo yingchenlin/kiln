@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import numpy as np
 
 from .mlp import MLP
@@ -9,11 +8,10 @@ from .mlp import MLP
 def outer(x):
     return x.unsqueeze(-1) * x.unsqueeze(-2)
 
-def std_norm_pdf(z):
-    return (z.square() * -0.5).exp() * np.sqrt(1 / (np.pi * 2))
-
-def std_norm_cdf(z):
-    return ((z * np.sqrt(0.5)).erf() + 1) * 0.5
+def gaussian(z):
+    g0 = (z.square() * -0.5).exp() * np.sqrt(1 / (np.pi * 2))
+    g1 = ((z * np.sqrt(0.5)).erf() + 1) * 0.5
+    return g0, g1
 
 def cross_entropy(x, i, dim=-1):
     return x.logsumexp(dim) - x.gather(dim, i.unsqueeze(dim)).squeeze(dim)
@@ -31,54 +29,65 @@ class CovReLU(nn.ReLU):
         super().__init__()
         self.biased = config["biased"]
         self.order = config["order"]
+        self.stop_grad = config["stop_grad"]
 
     def extra_repr(self):
-        return f"biased={self.biased} order={self.order}"
+        return f"biased={self.biased} order={self.order} stop_grad={self.stop_grad}"
 
     def forward(self, input):
         m, k = input
         if k == None:
             return super().forward(m), None
 
-        if self.biased or self.order > 0:
+        # compute attributes
+        s = k.diagonal(0, 1, 2).sqrt() + 1e-8 # standard deviation
+        g0, g1 = gaussian(m / s)
 
-            # retrieve attributes
-            s = k.diagonal(0, 1, 2).sqrt() # standard deviation
-            r = k / (outer(s) + 1e-8) # correlation coefficient
-            z = m / (s + 1e-8) # inverse coefficient of variation
+        mp = self._mean(m, s, g0, g1)
+        km = self._cov_mul(m, s, k, g0, g1)
+        if self.stop_grad:
+            km = km.detach()
+        kp = k * km
+        return mp, kp
 
-            # compute probabilities
-            g0 = std_norm_pdf(z)
-            g1 = std_norm_cdf(z)
-            g2 = z * g1 + g0 # anti-devriative of std_norm_cdf
-
-        # update distribution
+    def _mean(self, m, s, g0, g1) -> torch.Tensor:
         if self.biased:
-            mp = s * g2
+            return m * g1 + s * g0
         else:
-            mp = super().forward(m)
+            return super().forward(m)
+
+    def _cov_mul(self, m, s, k, g0, g1) -> torch.Tensor:
         if self.order == 0:
-            kp = k * outer(m > 0)
+            return outer(m > 0)
         elif self.order == 1:
-            kp = k * outer(g1)
+            return outer(g1)
         elif self.order == 2:
-            kp = k * (outer(g1) + outer(g0) * r * 0.5)
+            return (outer(g1) + (k * 0.5) * outer(g0 / s))
         else:
             raise Exception(f"unsupported order '{self.order}'")
-        return mp, kp
 
 
 class CovDropout(nn.Linear):
 
     def __init__(self, config, in_dim, out_dim, std):
         super().__init__(in_dim, out_dim)
-        self.std = std
         self.in_dim = in_dim
         self.out_dim = out_dim
-        self.cross = config["cross"]
+        self.std = std
+        self.dropout_cross = config["dropout_cross"]
+        self.dropout_stop_grad = config["dropout_stop_grad"]
+        self.linear_stop_grad = config["linear_stop_grad"]
 
     def extra_repr(self):
-        return f"in_dim={self.in_dim} out_dim={self.out_dim} std={self.std} cross={self.cross}"
+        props = {
+            "in_dim": self.in_dim,
+            "out_dim": self.out_dim,
+            "std": self.std,
+            "dropout_cross": self.dropout_cross,
+            "dropout_stop_grad": self.dropout_stop_grad,
+            "linear_stop_grad": self.linear_stop_grad,
+        }
+        return " ".join([f"{k}={v}" for k, v in props.items()])
 
     def forward(self, input):
         m, k = input
@@ -87,25 +96,31 @@ class CovDropout(nn.Linear):
         return m, k
 
     def _dropout(self, m, k):
+        if self.std == 0:
+            return m, k
+
+        d = m.square()
+        if self.dropout_stop_grad:
+            d = d.detach()
+        if self.dropout_cross and k != None:
+            d = d + k.diagonal(0, 1, 2)
+
         v = self.std ** 2
-        if v == 0:
-            kp = k
-        elif k == None:
-            kp = v * m.square().diag_embed()
-        elif not self.cross:
-            kp = k + v * m.square().diag_embed()
-        else:
-            d = k.diagonal(0, 1, 2) + m.square()
-            kp = k + v * d.diag_embed()
+        kp = k if k != None else 0
+        kp = kp + v * d.diag_embed()
+
         return m, kp
 
     def _linear(self, m, k):
         mp = super().forward(m)
         if k == None:
-            kp = None
-        else:
-            w = self.weight
-            kp = w @ k @ w.T
+            return mp, None
+
+        w = self.weight
+        if self.linear_stop_grad:
+            w = w.detach()
+        kp = w @ k @ w.T
+
         return mp, kp
 
 
@@ -129,8 +144,8 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
 
         # sample from multivariate normal distribution
         l, _ = torch.linalg.cholesky_ex(k)
-        u = torch.randn((self.num_samples, 1, l.size(-1), 1), device=l.device)
-        x = m.unsqueeze(0) + (l.unsqueeze(0) @ u).squeeze(-1)
+        r = torch.randn((self.num_samples, 1, l.size(-1), 1), device=l.device)
+        x = m.unsqueeze(0) + (l.unsqueeze(0) @ r).squeeze(-1)
 
         # expected value of cross entropy loss
         ip = i.unsqueeze(0).expand(x.shape[:-1])

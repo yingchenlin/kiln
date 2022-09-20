@@ -14,7 +14,8 @@
       "cov-loss": ["mc"],
       "cov-biased": ["b0"],
       "cov-order": ["o2"],
-      "cov-cross": true
+      "cov-cross": ["c0"],
+      "cov-stop-grad": true
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -39,8 +40,26 @@
       "weight": {"model": {"dropout": {"on": "weight", "layers": [0, 1, 2]}}},
       "normal": {"model": {"dropout": {"name": "normal"}}},
       "cov": {
-        "model": {"name": "cov-mlp", "activation": {"biased": true, "order": 2}, "dropout": {"interaction": true}}, 
-        "fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}
+        "model": {
+          "name": "cov-mlp", 
+          "activation": {
+            "biased": true, 
+            "order": 2, 
+            "stop_grad": false
+          },
+          "dropout": {
+            "dropout_cross": true,
+            "dropout_stop_grad": false,
+            "linear_stop_grad": false
+          }
+        },
+        "fit": {
+          "loss_fn": {
+            "name": "cov-mc-ce", 
+            "samples": 1000, 
+            "stop_grad": false
+          }
+        }
       },
       "lin-apx": {"model": {"dropout": {"name": "lin-apx"}}},
       "l2s": {"model": {"dropout": {"name": "l2", "on": "state", "std": 2e-5}}},
@@ -62,6 +81,12 @@
     "cov-cross": {
       "c0": {"model": {"dropout": {"cross": false}}},
       "c1": {"model": {"dropout": {"cross": true}}}
+    },
+    "cov-stop-grad": {
+      "": {},
+      "dsg": {"fit": {"dropout": {"dropout_stop_grad": true}}},
+      "lsg": {"fit": {"dropout": {"linear_stop_grad": true}}},
+      "asg": {"fit": {"activation": {"stop_grad": true}}}
     },
     "lin-apx": {
       "0": {"model": {"dropout": {"std": 0}}},

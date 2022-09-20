@@ -5,14 +5,14 @@ from functools import lru_cache
 
 class EventDataset:
 
-    def __init__(self, config):
+    def __init__(self, config, path):
 
-        path = self._get_state_path(config)
-        if os.path.exists(path):
-            self._load(path)
+        state_path = self._get_state_path(config, path)
+        if os.path.exists(state_path):
+            self._load(state_path)
         else:
             self._setup(config)
-            self._save(path)
+            self._save(state_path)
 
         num_users = len(self.user_vocab)
         num_items = len(self.item_vocab)
@@ -23,9 +23,8 @@ class EventDataset:
         self.input_shape = (num_items,)
         self.num_classes = num_items
 
-    def _get_state_path(self, config):
+    def _get_state_path(self, config, path):
         name = config["name"]
-        path = config["path"]
         min_user = config["min_user"]
         min_item = config["min_item"]
         return f"{path}/{name}/cache-mu_{min_user}-mi_{min_item}.pt"

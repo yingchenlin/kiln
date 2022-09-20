@@ -8,11 +8,11 @@ from metrics import Metrics
 
 class Engine:
 
-    def setup(self, config, device, verbose):
+    def setup(self, config, path, device, verbose):
 
         self.device = device
 
-        self.dataset = get_dataset(config["dataset"])
+        self.dataset = get_dataset(config["dataset"], path)
         self.model = get_model(
             config["model"], 
             self.dataset.input_shape, 

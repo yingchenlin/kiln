@@ -1,14 +1,12 @@
 import torch
 import torchvision
 
-from functools import lru_cache
-
 
 class ImageDataset:
 
-    def __init__(self, config):
+    def __init__(self, config, path):
         input_shape, num_classes, train_set, test_set = \
-            ImageDataset._load_dataset(config["name"], config["path"])
+            ImageDataset._load_dataset(config["name"], path)
         self.input_shape = input_shape
         self.num_classes = num_classes
         self.train_loader = self._get_dataloader(config["train"], train_set)
@@ -29,7 +27,6 @@ class ImageDataset:
         return transform
 
     @staticmethod
-    @lru_cache
     def _load_dataset(name, path):
         root = f"{path}/{name}"
 
