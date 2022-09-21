@@ -79,8 +79,8 @@
       "b1": {"model": {"activation": {"biased": true}}}
     },
     "cov-cross": {
-      "c0": {"model": {"dropout": {"cross": false}}},
-      "c1": {"model": {"dropout": {"cross": true}}}
+      "c0": {"model": {"dropout": {"dropout_cross": false}}},
+      "c1": {"model": {"dropout": {"dropout_cross": true}}}
     },
     "cov-stop-grad": {
       "asg": {"model": {"activation": {"stop_grad": true}}},
