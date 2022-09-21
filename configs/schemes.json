@@ -83,10 +83,9 @@
       "c1": {"model": {"dropout": {"cross": true}}}
     },
     "cov-stop-grad": {
-      "": {},
-      "dsg": {"fit": {"dropout": {"dropout_stop_grad": true}}},
-      "lsg": {"fit": {"dropout": {"linear_stop_grad": true}}},
-      "asg": {"fit": {"activation": {"stop_grad": true}}}
+      "asg": {"model": {"activation": {"stop_grad": true}}},
+      "dsg": {"model": {"dropout": {"dropout_stop_grad": true}}},
+      "lsg": {"model": {"dropout": {"linear_stop_grad": true}}}
     },
     "lin-apx": {
       "0": {"model": {"dropout": {"std": 0}}},

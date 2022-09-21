@@ -83,7 +83,6 @@ class Task:
 
         self.epoch = 0
         self.num_epochs = self.config["fit"]["epochs"]
-        self.checkpoint_interval = self.config["fit"]["checkpoint_interval"]
         self.logs = []
 
         self.engine.setup(self.config, self.dataset_path, self.device, self.verbose)
@@ -138,14 +137,11 @@ class Task:
         with open(f"{self.output_path}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
 
-        if self.checkpoint_interval != 0 and \
-            self.epoch % self.checkpoint_interval == 0:
-            self.engine.save_state(
-                f"{self.output_path}/checkpoint-{self.epoch}.pt")
-
     def _finish(self):
         with open(f"{self.output_path}/done", "w"):
             pass
+        self.engine.save_state(
+            f"{self.output_path}/checkpoint-{self.epoch}.pt")
         logging.info(f"{self.label}: finish")
 
 
