@@ -12,10 +12,9 @@
     "cov": {
       "schemes": ["cov"],
       "cov-loss": ["mc"],
-      "cov-biased": ["b0"],
-      "cov-order": ["o2"],
-      "cov-cross": ["c0"],
-      "cov-stop-grad": ["Lsg"]
+      "cov-biased": true,
+      "cov-order": ["o1"],
+      "cov-cross": true
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -86,7 +85,7 @@
       "asg": {"model": {"activation": {"stop_grad": true}}},
       "dsg": {"model": {"dropout": {"dropout_stop_grad": true}}},
       "lsg": {"model": {"dropout": {"linear_stop_grad": true}}},
-      "Lsg": {"fit": {"loss_fn": {"stop_grad": true}}}
+      "fsg": {"fit": {"loss_fn": {"stop_grad": true}}}
     },
     "lin-apx": {
       "0": {"model": {"dropout": {"std": 0}}},
