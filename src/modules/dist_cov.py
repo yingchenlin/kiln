@@ -136,6 +136,7 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.num_samples = config["samples"]
+        self.stop_grad = config["stop_grad"]
 
     def forward(self, input, target):
         (m, k), i = input, target
@@ -145,11 +146,17 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
         # sample from multivariate normal distribution
         l, _ = torch.linalg.cholesky_ex(k)
         r = torch.randn((self.num_samples, 1, l.size(-1), 1), device=l.device)
-        x = m.unsqueeze(0) + (l.unsqueeze(0) @ r).squeeze(-1)
+        d = (l.unsqueeze(0) @ r).squeeze(-1)
 
         # expected value of cross entropy loss
-        ip = i.unsqueeze(0).expand(x.shape[:-1])
-        return cross_entropy(x, ip).mean(0)
+        mp = m.unsqueeze(0)
+        if self.stop_grad: mp = mp.detach()
+        ip = i.unsqueeze(0).expand(d.shape[:-1])
+        L = cross_entropy(mp + d, ip).mean(0)
+        if self.stop_grad:
+            L0 = cross_entropy(m, i)
+            L = L0 + (L - L0.detach())
+        return L
 
 
 class CovQuadraticCrossEntropyLoss(nn.Module):
