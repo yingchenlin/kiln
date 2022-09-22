@@ -13,7 +13,7 @@
       "schemes": ["cov"],
       "cov-loss": ["mc"],
       "cov-biased": true,
-      "cov-order": ["o1"],
+      "cov-order": ["o0"],
       "cov-cross": true
     },
     "l2s": {
