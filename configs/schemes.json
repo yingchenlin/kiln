@@ -25,6 +25,9 @@
     "l2w": {
       "schemes": ["l2w"],
       "l2w": true
+    },
+    "test": {
+      "schemes": ["cov"]
     }
   },
   "factors": {
