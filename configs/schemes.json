@@ -15,7 +15,8 @@
       "cov-biased": ["b0"],
       "cov-order": ["o2"],
       "cov-cross": ["c0"],
-      "layers": ["l2"]
+      "cov-stop-grad": true,
+      "layers": ["l1"]
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -31,10 +32,11 @@
   },
   "factors": {
     "layers": {
-      "all": {},
+      "l": {"model": {"dropout": {"layers": []}}},
       "l1": {"model": {"dropout": {"layers": [1]}}},
       "l2": {"model": {"dropout": {"layers": [2]}}},
-      "l3": {"model": {"dropout": {"layers": [3]}}}
+      "l3": {"model": {"dropout": {"layers": [3]}}},
+      "l123": {"model": {"dropout": {"layers": [1, 2, 3]}}}
     },
     "schemes": {
       "base": {},
