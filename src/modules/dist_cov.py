@@ -74,9 +74,11 @@ class CovDropout(nn.Linear):
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.std = std
+        self.on = config["on"]
         self.dropout_cross = config["dropout_cross"]
-        self.dropout_stop_grad = config["dropout_stop_grad"]
-        self.linear_stop_grad = config["linear_stop_grad"]
+        self.state_stop_grad = config["state_stop_grad"]
+        self.weight_stop_grad = config["weight_stop_grad"]
+        self.propagate_stop_grad = config["propagate_stop_grad"]
 
     def extra_repr(self):
         props = {
@@ -84,44 +86,50 @@ class CovDropout(nn.Linear):
             "out_dim": self.out_dim,
             "std": self.std,
             "dropout_cross": self.dropout_cross,
-            "dropout_stop_grad": self.dropout_stop_grad,
-            "linear_stop_grad": self.linear_stop_grad,
+            "state_stop_grad": self.state_stop_grad,
+            "weight_stop_grad": self.weight_stop_grad,
+            "propagate_stop_grad": self.propagate_stop_grad,
         }
         return " ".join([f"{k}={v}" for k, v in props.items()])
 
     def forward(self, input):
         m, k = input
-        m, k = self._dropout(m, k)
-        m, k = self._linear(m, k)
-        return m, k
-
-    def _dropout(self, m, k):
-        if self.std == 0:
-            return m, k
-
-        d = m.square()
-        if self.dropout_stop_grad:
-            d = d.detach()
-        if self.dropout_cross and k != None:
-            d = d + k.diagonal(0, 1, 2)
-
-        v = self.std ** 2
-        kp = k if k != None else 0
-        kp = kp + v * d.diag_embed()
-
-        return m, kp
-
-    def _linear(self, m, k):
         mp = super().forward(m)
-        if k == None:
-            return mp, None
+        k0 = self._cov_propagate(k)
+        k1 = self._cov_dropout(m, k)
+        kp = k0 if k1 == None else k1 if k0 == None else k0 + k1
+        return mp, kp
+
+    def _cov_dropout(self, m, k):
+        if self.std == 0:
+            return None
 
         w = self.weight
-        if self.linear_stop_grad:
+        if self.weight_stop_grad:
             w = w.detach()
-        kp = w @ k @ w.T
+        if self.state_stop_grad:
+            m = m.detach()
 
-        return mp, kp
+        d = m.square()
+        if self.dropout_cross and k != None:
+            d = d + k.diagonal(0, 1, 2)
+        d = d * self.std ** 2
+
+        kp = w @ d.diag_embed() @ w.T
+        if self.on == "weight":
+            kp = kp.diagonal(0, 1, 2).diag_embed()
+
+        return kp
+
+    def _cov_propagate(self, k):
+        if k == None:
+            return None
+
+        w = self.weight
+        if self.propagate_stop_grad:
+            w = w.detach()
+
+        return w @ k @ w.T
 
 
 class CovMLP(MLP):

@@ -3,7 +3,7 @@
   "groups": {
     "schemes": {
       "schemes": true,
-      "layers": ["all"]
+      "layers": ["l2"]
     },
     "lin-apx": {
       "schemes": ["lin-apx"],
@@ -12,9 +12,10 @@
     "cov": {
       "schemes": ["cov"],
       "cov-loss": ["mc"],
-      "cov-biased": true,
-      "cov-order": ["o0"],
-      "cov-cross": true
+      "cov-biased": ["b0"],
+      "cov-order": ["o2"],
+      "cov-cross": ["c0"],
+      "cov-stop-grad": ["wsg", "psg"]
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -48,8 +49,9 @@
           },
           "dropout": {
             "dropout_cross": true,
-            "dropout_stop_grad": false,
-            "linear_stop_grad": false
+            "state_stop_grad": false,
+            "weight_stop_grad": false,
+            "propagate_stop_grad": false
           }
         },
         "fit": {
@@ -82,10 +84,11 @@
       "c1": {"model": {"dropout": {"dropout_cross": true}}}
     },
     "cov-stop-grad": {
-      "asg": {"model": {"activation": {"stop_grad": true}}},
-      "dsg": {"model": {"dropout": {"dropout_stop_grad": true}}},
-      "lsg": {"model": {"dropout": {"linear_stop_grad": true}}},
-      "fsg": {"fit": {"loss_fn": {"stop_grad": true}}}
+      "gsg": {"model": {"activation": {"stop_grad": true}}},
+      "xsg": {"model": {"dropout": {"state_stop_grad": true}}},
+      "wsg": {"model": {"dropout": {"weight_stop_grad": true}}},
+      "psg": {"model": {"dropout": {"propagate_stop_grad": true}}},
+      "hsg": {"fit": {"loss_fn": {"stop_grad": true}}}
     },
     "lin-apx": {
       "0": {"model": {"dropout": {"std": 0}}},
