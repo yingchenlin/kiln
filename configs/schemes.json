@@ -15,7 +15,6 @@
       "cov-biased": ["b0"],
       "cov-order": ["o2"],
       "cov-cross": ["c0"],
-      "cov-stop-grad": true,
       "layers": ["l1"]
     },
     "l2s": {
