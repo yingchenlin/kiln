@@ -12,10 +12,10 @@
     "cov": {
       "schemes": ["cov"],
       "cov-loss": ["mc"],
-      "cov-biased": ["b0"],
+      "cov-biased": ["b1"],
       "cov-order": ["o2"],
-      "cov-cross": ["c0"],
-      "layers": ["l1"]
+      "cov-cross": ["c1"],
+      "layers": true
     },
     "l2s": {
       "schemes": ["l2s"],

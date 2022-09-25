@@ -54,14 +54,17 @@ class Engine:
             targets = targets.to(self.device)
 
             self.optimizer.zero_grad()
-            
+
             all_losses = []
             for _ in range(self.loss_samples):
+
                 outputs = self.model(inputs)
                 losses = self.loss_fn(outputs, targets)
                 losses = losses + self.model.reg_loss()
-                self.metrics.add_states(self.model)
-                self.metrics.add_losses(losses)
+
+                self.metrics.add_states(targets, self.model)
+                self.metrics.add_losses(outputs, targets, losses)
+
                 all_losses.append(losses)
             losses = torch.stack(all_losses).mean(0)
 
@@ -69,6 +72,7 @@ class Engine:
             self.optimizer.step()
 
             yield self.metrics.get()
+
 
     def eval(self, dataloader):
 
@@ -84,12 +88,14 @@ class Engine:
 
                 outputs = self.model(inputs)
                 losses = self.loss_fn(outputs, targets)
+                losses = losses + self.model.reg_loss()
 
-                self.metrics.add_states(self.model)
-                self.metrics.add_losses(losses)
+                self.metrics.add_states(targets, self.model)
+                self.metrics.add_losses(outputs, targets, losses)
                 self.metrics.add_ranks(inputs, outputs, targets)
 
                 yield self.metrics.get()
+
 
 
 if __name__ == "__main__":

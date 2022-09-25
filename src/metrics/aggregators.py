@@ -53,6 +53,18 @@ class L2Aggregator(Aggregator):
         return m.sqrt().item()
 
 
+class SetAggregator(Aggregator):
+
+    def reset(self) -> None:
+        self.value = torch.nan
+
+    def add(self, x: torch.Tensor) -> None:
+        self.value = x.item()
+
+    def get(self) -> torch.Tensor:
+        return self.value
+
+
 def get_aggregator(name: str) -> Aggregator:
     if name == "mean":
         return MeanAggregator()
@@ -62,4 +74,6 @@ def get_aggregator(name: str) -> Aggregator:
         return L1Aggregator()
     if name == "l2":
         return L2Aggregator()
+    if name == "set":
+        return SetAggregator()
     raise Exception(f"unsupported aggregator name={name}")
