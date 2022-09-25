@@ -27,11 +27,11 @@ class AggregateLayer(nn.Module):
         self.s1.add_(x.sum(0))
         self.s2.add_(x.T @ x)
 
-        n = (x > 0).long()
+        n = (x > 0).float()
         self.n1.add_(n.sum(0))
         self.n2.add_(n.T @ n)
 
-        i = F.one_hot(n, 2)
+        i = F.one_hot((x > 0).long(), 2)
         j = F.one_hot(y, self.num_classes)
         self.n3.add_((i.unsqueeze(2) * j.unsqueeze(1).unsqueeze(3)).sum(0))
 
