@@ -101,7 +101,7 @@
       "hsg": {"fit": {"loss_fn": {"stop_grad": true}}}
     },
     "lr": {
-      "l5e-2": {"fit": {"optimizer": {"learning_rate": 5e-2}}},
+      "l5e-2": {"fit": {"optimizer": {"learning_rate": 5e-4}}},
       "l1e-3": {"fit": {"optimizer": {"learning_rate": 1e-3}}},
       "l2e-3": {"fit": {"optimizer": {"learning_rate": 2e-3}}},
       "l5e-3": {"fit": {"optimizer": {"learning_rate": 5e-3}}}
