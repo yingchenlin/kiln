@@ -28,7 +28,7 @@ class MLP(nn.Sequential):
         num_layers = config["num_layers"]
 
         layers = []
-        layers.append(self.Flatten())
+        layers.append(self.Flatten(start_dim=2))
         for i in range(num_layers):
             layers.append(self._get_dropout(config["dropout"], i, input_dim, hidden_dim))
             layers.append(CaptureLayer(hidden_dim, num_classes))

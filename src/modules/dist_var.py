@@ -17,8 +17,7 @@ class VarReLU(nn.ReLU):
         z = m / (s + 1e-8) # inverse coefficient of variation
 
         # compute probabilities
-        g0 = std_norm_pdf(z)
-        g1 = std_norm_cdf(z)
+        g0, g1 = gaussian(z)
         g2 = z * g1 + g0 # anti-devriative of std_norm_cdf
 
         # update distribution

@@ -24,7 +24,7 @@ class Engine:
             config["fit"]["optimizer"], self.model.parameters())
         self.metrics = Metrics(config["metrics"])
 
-        self.loss_samples = config["fit"]["loss_samples"]
+        self.num_samples = config["fit"]["num_samples"]
 
         if verbose:
             print(config)
@@ -53,20 +53,17 @@ class Engine:
             inputs = inputs.to(self.device)
             targets = targets.to(self.device)
 
+            inputs = inputs.unsqueeze(0).expand(self.num_samples, *inputs.shape)
+            targets = targets.unsqueeze(0).expand(self.num_samples, *targets.shape)
+
             self.optimizer.zero_grad()
 
-            all_losses = []
-            for _ in range(self.loss_samples):
+            outputs = self.model(inputs)
+            losses = self.loss_fn(outputs, targets)
+            losses = losses + self.model.reg_loss()
 
-                outputs = self.model(inputs)
-                losses = self.loss_fn(outputs, targets)
-                losses = losses + self.model.reg_loss()
-
-                self.metrics.add_states(targets, self.model)
-                self.metrics.add_losses(outputs, targets, losses)
-
-                all_losses.append(losses)
-            losses = torch.stack(all_losses).mean(0)
+            self.metrics.add_states(targets, self.model)
+            self.metrics.add_losses(outputs, targets, losses)
 
             losses.mean().backward()
             self.optimizer.step()

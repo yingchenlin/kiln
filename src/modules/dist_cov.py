@@ -40,7 +40,7 @@ class CovReLU(nn.ReLU):
             return super().forward(m), None
 
         # compute attributes
-        s = k.diagonal(0, 1, 2).sqrt() + 1e-8 # standard deviation
+        s = k.diagonal(0, -2, -1).sqrt() + 1e-8 # standard deviation
         g0, g1 = gaussian(m / s)
 
         mp = self._mean(m, s, g0, g1)
@@ -112,12 +112,12 @@ class CovDropout(nn.Linear):
 
         d = m.square()
         if self.dropout_cross and k != None:
-            d = d + k.diagonal(0, 1, 2)
+            d = d + k.diagonal(0, -2, -1)
         d = d * self.std ** 2
 
         kp = w @ d.diag_embed() @ w.T
         if self.on == "weight":
-            kp = kp.diagonal(0, 1, 2).diag_embed()
+            kp = kp.diagonal(0, -2, -1).diag_embed()
 
         return kp
 
@@ -143,7 +143,7 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.num_samples = config["samples"]
+        self.num_samples = config["num_samples"]
         self.stop_grad = config["stop_grad"]
 
     def forward(self, input, target):
@@ -174,6 +174,6 @@ class CovQuadraticCrossEntropyLoss(nn.Module):
         quad_term = 0
         if k != None:
             p = m.softmax(-1)
-            h = p.diag_embed(0, -2, -1) - p.unsqueeze(-1) * p.unsqueeze(-2)
+            h = p.diag_embed(0, -2, -1) - p.unsqueeze(-2) * p.unsqueeze(-1)
             quad_term = torch.einsum("bij,bij->b", k, h) * 0.5
         return cross_entropy(m, i) + quad_term

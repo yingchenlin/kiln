@@ -36,7 +36,7 @@
     "schemes": {
       "base": {},
       "none": {"model": {"dropout": {"std": 0}}},
-      "mean": {"fit": {"loss_samples": 16}},
+      "mean": {"fit": {"num_samples": 16}},
       "weight": {"model": {"dropout": {"on": "weight", "layers": [0, 1, 2]}}},
       "normal": {"model": {"dropout": {"name": "normal"}}},
       "cov": {
@@ -57,7 +57,7 @@
         "fit": {
           "loss_fn": {
             "name": "cov-mc-ce", 
-            "samples": 1000, 
+            "num_samples": 1000, 
             "stop_grad": false
           }
         }
@@ -67,7 +67,7 @@
       "l2w": {"model": {"dropout": {"name": "l2", "on": "weight", "std": 1e-2}}}
     },
     "cov-loss": {
-      "mc": {"fit": {"loss_fn": {"name": "cov-mc-ce", "samples": 1000}}},
+      "mc": {"fit": {"loss_fn": {"name": "cov-mc-ce", "num_samples": 1000}}},
       "quad": {"fit": {"loss_fn": {"name": "cov-quad-ce"}}}
     },
     "cov-order": {

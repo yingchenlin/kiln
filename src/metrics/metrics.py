@@ -1,22 +1,21 @@
 from typing import Dict
-import torch.nn as nn
 import torch.nn.functional as F
 
 from .aggregators import *
 from .ranking import Ranking
-from .modules import AggregateLayer, CaptureLayer
+from .modules import CaptureLayer
 
 
 def ce(x, i):
     if isinstance(x, tuple):
         x = x[0]
-    return F.cross_entropy(x, i)
+    return x.logsumexp(-1) - x.gather(-1, i.unsqueeze(-1)).squeeze(-1)
 
 
 def mi(n, eps=1e-8):
-    p = n / n.sum((1, 2), keepdim=True) + eps
-    q = p / p.sum(-1, keepdim=True) / p.sum(-2, keepdim=True)
-    return (p * q.log()).sum((-1, -2)).mean()
+    p = n / n.sum((-2, -1), keepdim=True) + eps
+    q = p / p.sum(-2, keepdim=True) / p.sum(-1, keepdim=True)
+    return (p * q.log()).sum((-2, -1)).mean()
 
 
 class Metrics:
@@ -37,8 +36,6 @@ class Metrics:
             if isinstance(module, CaptureLayer):
                 self._add(f"${name}.state.l0", "l0", module.state)
                 self._add(f"${name}.state.l2", "l2", module.state)
-                module.update(targets)
-                self._add(f"${name}.state.mi", "set", mi(module.get_agg().n3))
 
     def add_losses(self, outputs: torch.Tensor, targets: torch.Tensor, losses: torch.Tensor):
         self._add("loss", "mean", losses)
