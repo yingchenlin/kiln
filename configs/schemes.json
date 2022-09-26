@@ -10,7 +10,11 @@
       "lin-apx": true
     },
     "cov": {
-      "schemes": ["base", "mean"],
+      "schemes": ["cov"],
+      "cov-loss": ["mc"],
+      "cov-biased": ["b1"],
+      "cov-order": ["o2"],
+      "cov-cross": ["c1"],
       "layers": true
     },
     "hpo": {
