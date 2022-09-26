@@ -50,11 +50,8 @@ class Engine:
         self.metrics.reset()
 
         for inputs, targets in dataloader:
-            inputs = inputs.to(self.device)
-            targets = targets.to(self.device)
-
-            inputs = inputs.unsqueeze(0).expand(self.num_samples, *inputs.shape)
-            targets = targets.unsqueeze(0).expand(self.num_samples, *targets.shape)
+            inputs = self._pack(inputs, self.num_samples)
+            targets = self._pack(targets, self.num_samples)
 
             self.optimizer.zero_grad()
 
@@ -80,8 +77,8 @@ class Engine:
             self.metrics.add_params(self.model)
 
             for inputs, targets in dataloader:
-                inputs = inputs.to(self.device)
-                targets = targets.to(self.device)
+                inputs = self._pack(inputs)
+                targets = self._pack(targets)
 
                 outputs = self.model(inputs)
                 losses = self.loss_fn(outputs, targets)
@@ -92,7 +89,11 @@ class Engine:
                 self.metrics.add_ranks(inputs, outputs, targets)
 
                 yield self.metrics.get()
-
+    
+    def _pack(self, data: torch.Tensor, num_copies = 1):
+        data = data.to(self.device)
+        data = data.unsqueeze(0).expand(num_copies, *data.shape)
+        return data
 
 
 if __name__ == "__main__":
