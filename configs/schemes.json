@@ -10,7 +10,7 @@
       "lin-apx": true
     },
     "cov": {
-      "schemes": ["mean"],
+      "schemes": ["base", "mean"],
       "layers": true
     },
     "l2s": {
