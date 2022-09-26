@@ -13,6 +13,11 @@
       "schemes": ["base", "mean"],
       "layers": true
     },
+    "hpo": {
+      "schemes": ["mean"],
+      "std": true,
+      "lr": true
+    },
     "l2s": {
       "schemes": ["l2s"],
       "l2s": true
@@ -91,11 +96,17 @@
       "lsg": {"model": {"dropout": {"weight_stop_grad": true, "propagate_stop_grad": true}}},
       "hsg": {"fit": {"loss_fn": {"stop_grad": true}}}
     },
-    "lin-apx": {
-      "0": {"model": {"dropout": {"std": 0}}},
-      "1.5": {"model": {"dropout": {"std": 1.5}}},
-      "1.0": {"model": {"dropout": {"std": 1.0}}},
-      "0.5": {"model": {"dropout": {"std": 0.5}}}
+    "lr": {
+      "l5e-2": {"fit": {"optimizer": {"learning_rate": 5e-2}}},
+      "l1e-3": {"fit": {"optimizer": {"learning_rate": 1e-3}}},
+      "l2e-3": {"fit": {"optimizer": {"learning_rate": 2e-3}}},
+      "l5e-3": {"fit": {"optimizer": {"learning_rate": 5e-3}}}
+    },
+    "std": {
+      "s0.2": {"model": {"dropout": {"std": 0.2}}},
+      "s0.5": {"model": {"dropout": {"std": 0.5}}},
+      "s1.0": {"model": {"dropout": {"std": 1.0}}},
+      "s2.0": {"model": {"dropout": {"std": 2.0}}}
     },
     "l2s": {
       "0": {"model": {"dropout": {"std": 0}}},
