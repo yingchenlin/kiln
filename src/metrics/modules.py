@@ -20,6 +20,7 @@ class AggregateLayer(nn.Module):
         self.n2: torch.Tensor
 
     def add(self, x: torch.Tensor) -> None:
+        x = x.detach() # prevent memory leak
         x = x.flatten(end_dim=-2)
         self.s0.add_(len(x))
         self.s1.add_(x.sum(0))
