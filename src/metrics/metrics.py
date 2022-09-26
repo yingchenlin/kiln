@@ -12,12 +12,6 @@ def ce(x, i):
     return x.logsumexp(-1) - x.gather(-1, i.unsqueeze(-1)).squeeze(-1)
 
 
-def mi(n, eps=1e-8):
-    p = n / n.sum((-2, -1), keepdim=True) + eps
-    q = p / p.sum(-2, keepdim=True) / p.sum(-1, keepdim=True)
-    return (p * q.log()).sum((-2, -1)).mean()
-
-
 class Metrics:
 
     def __init__(self, config):

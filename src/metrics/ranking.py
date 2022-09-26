@@ -53,7 +53,7 @@ class Ranking:
         assert(targets.dtype == torch.int64)
         
         outputs = outputs + torch.rand_like(outputs) * self.eps
-        target_outputs = torch.gather(outputs, 1, targets.unsqueeze(-1))
+        target_outputs = torch.gather(outputs, -1, targets.unsqueeze(-1))
         places = (outputs >= target_outputs).sum(-1)
 
         for name in self.weights:

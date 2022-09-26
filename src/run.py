@@ -67,7 +67,6 @@ class Engine:
 
             yield self.metrics.get()
 
-
     def eval(self, dataloader):
 
         self.model.eval()
@@ -89,7 +88,7 @@ class Engine:
                 self.metrics.add_ranks(inputs, outputs, targets)
 
                 yield self.metrics.get()
-    
+
     def _pack(self, data: torch.Tensor, num_copies = 1):
         data = data.to(self.device)
         data = data.unsqueeze(0).expand(num_copies, *data.shape)
