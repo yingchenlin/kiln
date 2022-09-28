@@ -19,8 +19,8 @@
     },
     "hpo": {
       "schemes": ["mean"],
-      "std": ["s0.0"],
-      "lr": true
+      "std": true,
+      "lr": ["l1e-2"]
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -104,7 +104,8 @@
       "l5e-4": {"fit": {"optimizer": {"learning_rate": 5e-4}}},
       "l1e-3": {"fit": {"optimizer": {"learning_rate": 1e-3}}},
       "l2e-3": {"fit": {"optimizer": {"learning_rate": 2e-3}}},
-      "l5e-3": {"fit": {"optimizer": {"learning_rate": 5e-3}}}
+      "l5e-3": {"fit": {"optimizer": {"learning_rate": 5e-3}}},
+      "l1e-2": {"fit": {"optimizer": {"learning_rate": 1e-2}}}
     },
     "std": {
       "s0.0": {"model": {"dropout": {"std": 0.0}}},
