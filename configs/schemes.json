@@ -15,12 +15,13 @@
       "cov-biased": ["b1"],
       "cov-order": ["o2"],
       "cov-cross": ["c1"],
-      "layers": ["l0"]
+      "layers": ["l2"]
     },
     "hpo": {
       "schemes": ["mean"],
-      "std": true,
-      "lr": ["l1e-2"]
+      "std": ["s0.5"],
+      "lr": ["l5e-3"],
+      "bs": true
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -102,18 +103,19 @@
       "hsg": {"fit": {"loss_fn": {"stop_grad": true}}}
     },
     "lr": {
-      "l5e-4": {"fit": {"optimizer": {"learning_rate": 5e-4}}},
-      "l1e-3": {"fit": {"optimizer": {"learning_rate": 1e-3}}},
       "l2e-3": {"fit": {"optimizer": {"learning_rate": 2e-3}}},
       "l5e-3": {"fit": {"optimizer": {"learning_rate": 5e-3}}},
       "l1e-2": {"fit": {"optimizer": {"learning_rate": 1e-2}}}
     },
+    "bs": {
+      "b50": {"dataset": {"train": {"batch_size": 50}}},
+      "b100": {"dataset": {"train": {"batch_size": 100}}},
+      "b200": {"dataset": {"train": {"batch_size": 200}}}
+    },
     "std": {
-      "s0.0": {"model": {"dropout": {"std": 0.0}}},
-      "s0.2": {"model": {"dropout": {"std": 0.2}}},
+      "s0.4": {"model": {"dropout": {"std": 0.4}}},
       "s0.5": {"model": {"dropout": {"std": 0.5}}},
-      "s1.0": {"model": {"dropout": {"std": 1.0}}},
-      "s2.0": {"model": {"dropout": {"std": 2.0}}}
+      "s0.6": {"model": {"dropout": {"std": 0.6}}}
     },
     "l2s": {
       "0": {"model": {"dropout": {"std": 0}}},
