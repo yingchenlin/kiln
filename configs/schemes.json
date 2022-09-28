@@ -20,7 +20,7 @@
     "hpo": {
       "schemes": ["mean"],
       "std": ["s0.5"],
-      "lr": ["l5e-3"],
+      "lr": true,
       "bs": true
     },
     "l2s": {
