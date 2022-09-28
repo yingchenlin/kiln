@@ -15,7 +15,7 @@
       "cov-biased": ["b1"],
       "cov-order": ["o2"],
       "cov-cross": ["c1"],
-      "layers": true
+      "layers": ["l0"]
     },
     "hpo": {
       "schemes": ["mean"],
@@ -37,6 +37,7 @@
   "factors": {
     "layers": {
       "l": {"model": {"dropout": {"layers": []}}},
+      "l0": {"model": {"dropout": {"layers": [0]}}},
       "l1": {"model": {"dropout": {"layers": [1]}}},
       "l2": {"model": {"dropout": {"layers": [2]}}},
       "l3": {"model": {"dropout": {"layers": [3]}}},
