@@ -17,6 +17,10 @@
       "cov-cross": ["c1"],
       "layers": ["l2"]
     },
+    "lyr": {
+      "schemes": ["mean"],
+      "layers": true
+    },
     "hpo": {
       "schemes": ["mean"],
       "std": ["s0.0"],
@@ -38,7 +42,6 @@
   "factors": {
     "layers": {
       "l": {"model": {"dropout": {"layers": []}}},
-      "l0": {"model": {"dropout": {"layers": [0]}}},
       "l1": {"model": {"dropout": {"layers": [1]}}},
       "l2": {"model": {"dropout": {"layers": [2]}}},
       "l3": {"model": {"dropout": {"layers": [3]}}},
