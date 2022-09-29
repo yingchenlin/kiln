@@ -116,6 +116,7 @@
       "b200": {"dataset": {"train": {"batch_size": 200}}}
     },
     "std": {
+      "s0.0": {"model": {"dropout": {"std": 0.0}}},
       "s0.4": {"model": {"dropout": {"std": 0.4}}},
       "s0.5": {"model": {"dropout": {"std": 0.5}}},
       "s0.6": {"model": {"dropout": {"std": 0.6}}}
