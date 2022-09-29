@@ -17,6 +17,13 @@
       "cov-cross": ["c1"],
       "layers": ["l2"]
     },
+    "dis": {
+      "schemes": ["cov"],
+      "cov-loss": ["mc"],
+      "cov-biased": ["b0", "b1"],
+      "cov-order": ["o1", "o2"],
+      "cov-cross": ["c0", "c1"]
+    },
     "lyr": {
       "schemes": ["mean"],
       "layers": true
