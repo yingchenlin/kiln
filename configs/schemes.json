@@ -26,6 +26,7 @@
     },
     "lyr": {
       "schemes": ["mean"],
+      "activations": ["erf2"],
       "layers": true
     },
     "hpo": {
@@ -47,6 +48,11 @@
     }
   },
   "factors": {
+    "activations": {
+      "relu": {"model": {"activation": {"name": "relu"}}},
+      "tanh": {"model": {"activation": {"name": "tanh"}}},
+      "erf2": {"model": {"activation": {"name": "erf2"}}}
+    },
     "layers": {
       "l": {"model": {"dropout": {"layers": []}}},
       "l1": {"model": {"dropout": {"layers": [1]}}},

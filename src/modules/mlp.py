@@ -11,7 +11,16 @@ def get_activation(config):
         return nn.ReLU()
     if name == "tanh":
         return nn.Tanh()
+    if name == "erf2":
+        return Erf2()
     raise Exception(f"unknown activation '{name}'")
+
+
+class Erf2(nn.Module):
+
+    def forward(self, x):
+        c = np.sqrt(np.pi) / 2
+        return (x * c).erf()
 
 
 class MLP(nn.Sequential):
