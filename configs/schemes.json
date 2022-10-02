@@ -26,7 +26,7 @@
     },
     "lyr": {
       "schemes": ["mean"],
-      "activations": ["erf2"],
+      "activations": ["tanh", "erf-t"],
       "layers": true
     },
     "hpo": {
@@ -51,7 +51,10 @@
     "activations": {
       "relu": {"model": {"activation": {"name": "relu"}}},
       "tanh": {"model": {"activation": {"name": "tanh"}}},
-      "erf2": {"model": {"activation": {"name": "erf2"}}}
+      "sigmoid": {"model": {"activation": {"name": "sigmoid"}}},
+      "erf": {"model": {"activation": {"name": "erf"}}},
+      "erf-s": {"model": {"activation": {"name": "erf-s"}}},
+      "erf-t": {"model": {"activation": {"name": "erf-t"}}}
     },
     "layers": {
       "l": {"model": {"dropout": {"layers": []}}},

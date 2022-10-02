@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 
-from .mlp import MLP
+from .mlp import MLP, Erf
 
 
 def outer(x):
@@ -17,10 +17,36 @@ def cross_entropy(x, i, dim=-1):
     return x.logsumexp(dim) - x.gather(dim, i.unsqueeze(dim)).squeeze(dim)
 
 
+def get_activation(config):
+    name = config["name"]
+    if name == "relu":
+        return CovReLU(config)
+    if name == "erf":
+        return CovErf(config, 1, 0, 1, 0)
+    if name == "erf-s":
+        return CovErf(config, np.sqrt(np.pi)/4, 0, 0.5, 0.5)
+    if name == "erf-t":
+        return CovErf(config, np.sqrt(np.pi)/2, 0, 1, 0)
+    raise Exception(f"unknown activation '{name}'")
+
+
 class DistFlatten(nn.Flatten):
 
     def forward(self, input):
         return super().forward(input), None
+
+
+class CovErf(Erf):
+
+    def __init__(self, config, sx, tx, sy, ty):
+        super().__init__(sx, tx, sy, ty)
+
+    def forward(self, input):
+        m, k = input
+        if k == None:
+            return super().forward(m), None
+
+        raise Exception(f"unimplemented")
 
 
 class CovReLU(nn.ReLU):

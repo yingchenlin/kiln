@@ -11,16 +11,31 @@ def get_activation(config):
         return nn.ReLU()
     if name == "tanh":
         return nn.Tanh()
-    if name == "erf2":
-        return Erf2()
+    if name == "sigmoid":
+        return nn.Sigmoid()
+    if name == "erf":
+        return Erf(1, 0, 1, 0)
+    if name == "erf-s":
+        return Erf(np.sqrt(np.pi)/4, 0, 0.5, 0.5)
+    if name == "erf-t":
+        return Erf(np.sqrt(np.pi)/2, 0, 1, 0)
     raise Exception(f"unknown activation '{name}'")
 
 
-class Erf2(nn.Module):
+class Erf(nn.Module):
+
+    def __init__(self, sx, tx, sy, ty):
+        super().__init__()
+        self.sx = sx
+        self.tx = tx
+        self.sy = sy
+        self.ty = ty
+
+    def extra_repr(self):
+        return f"sx={self.sx} tx={self.tx} sy={self.sy} ty={self.ty}"
 
     def forward(self, x):
-        c = np.sqrt(np.pi) / 2
-        return (x * c).erf()
+        return (x * self.sx + self.tx).erf() * self.sy + self.ty
 
 
 class MLP(nn.Sequential):
