@@ -41,7 +41,7 @@ class Task:
     def __init__(self, 
         config: dict, seed: int, 
         output_path: str, dataset_path: str, 
-        label: str, verbose: bool,
+        label: str, checkpoint: bool, verbose: bool,
         engine: IEngine,
     ):
         self.config = config
@@ -49,6 +49,7 @@ class Task:
         self.output_path = output_path
         self.dataset_path = dataset_path
         self.label = label
+        self.checkpoint = checkpoint
         self.verbose = verbose
         self.engine = engine
 
@@ -82,7 +83,8 @@ class Task:
             json.dump(self.config, f, indent=2)
 
         self.epoch = 0
-        self.num_epochs = self.config["fit"]["epochs"]
+        self.num_epochs = self.config["fit"]["num_epochs"]
+        self.ckpt_interval = self.config["fit"]["ckpt_interval"]
         self.logs = []
 
         self.engine.setup(self.config, self.dataset_path, self.device, self.verbose)
@@ -137,11 +139,13 @@ class Task:
         with open(f"{self.output_path}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
 
+        if self.checkpoint and self.epoch % self.ckpt_interval == 0:
+            self.engine.save_state(
+                f"{self.output_path}/checkpoint-{self.epoch}.pt")
+
     def _finish(self):
         with open(f"{self.output_path}/done", "w"):
             pass
-        self.engine.save_state(
-            f"{self.output_path}/checkpoint-{self.epoch}.pt")
         logging.info(f"{self.label}: finish")
 
 
@@ -150,11 +154,12 @@ def run(get_engine):
     parser.add_argument("--plan", "-p", type=str, default="configs/plan.json")
     parser.add_argument("--groups", "-g", type=str, default="")
     parser.add_argument("--samples", "-s", type=int, default=1)
-    parser.add_argument("--threads", "-t", type=int, default=4)
+    parser.add_argument("--threads", "-t", type=int, default=2)
     parser.add_argument("--label", "-l", type=str, default="test")
     parser.add_argument("--output", "-o", type=str, default="outputs")
     parser.add_argument("--dataset", "-D", type=str, default="datasets")
     parser.add_argument("--device", "-d", type=str, default="cuda")
+    parser.add_argument("--checkpoints", "-c", type=int, default=1)
     parser.add_argument("--verbose", "-v", action="store_true", default=False)
     args = parser.parse_args()
 
@@ -173,8 +178,9 @@ def run(get_engine):
     if args.groups == "":
         seed = random.getrandbits(31)
         output_path = f"{args.output}/{args.label}"
+        checkpoint = args.checkpoints > 0
         task = Task(config, seed, output_path, args.dataset,
-            args.label, args.verbose, get_engine())
+            args.label, checkpoint, args.verbose, get_engine())
         device = torch.device(args.device)
         task(device)
         return
@@ -189,8 +195,9 @@ def run(get_engine):
             label = "_".join(values)
             seed = random.getrandbits(31)
             output_path = f"{args.output}/{group}/{label}"
+            checkpoint = args.checkpoints > int(values[-1])
             task = Task(config_, seed, output_path, args.dataset,
-                label, args.verbose, get_engine())
+                label, checkpoint, args.verbose, get_engine())
             tasks.append(task)
 
     # spawn workers

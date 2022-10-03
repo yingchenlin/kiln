@@ -28,8 +28,8 @@
     }
   },
   "fit": {
-    "epochs": 50,
-    "checkpoint_interval": 10,
+    "num_epochs": 50,
+    "ckpt_interval": 25,
     "num_samples": 1,
     "loss_fn": {
       "name": "ce"
