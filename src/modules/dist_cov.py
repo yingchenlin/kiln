@@ -38,15 +38,51 @@ class DistFlatten(nn.Flatten):
 
 class CovErf(Erf):
 
-    def __init__(self, config, sx, tx, sy, ty):
-        super().__init__(sx, tx, sy, ty)
+    def __init__(self, config):
+        super().__init__(config)
+        self.biased = config["biased"]
+        self.order = config["order"]
+        self.stop_grad = config["stop_grad"]
+
+    def extra_repr(self):
+        return f"name={self.name} biased={self.biased} order={self.order} stop_grad={self.stop_grad}"
 
     def forward(self, input):
         m, k = input
         if k == None:
             return super().forward(m), None
 
-        raise Exception(f"unimplemented")
+        z, r, g0, g1 = self._compute(m, k)
+
+        if self.biased:
+            mp = g1
+        else:
+            mp = super().forward(m)
+
+        if self.order == 1:
+            km = r * outer(g0)
+        elif self.order == 2:
+            km = r * (1 + k * r * outer(z) / 2) * outer(g0)
+        else:
+            raise Exception(f"unsupported order '{self.order}'")
+
+        if self.stop_grad:
+            km = km.detach()
+        kp = k * km
+
+        return mp, kp
+
+    def _compute(self, m, k):
+        s = k.diagonal(0, -2, -1).sqrt() # standard deviation
+        sx, tx, sy, ty = Erf.TX[self.name]
+        sx, tx, sy, ty = sx * np.sqrt(2), tx * np.sqrt(2), sy * 2, ty - sy
+        n = 1 / ((s * sx).square() + 1).sqrt()
+        r = (sx ** 2) * outer(n)
+        z = (m * sx + tx) * n
+        g0, g1 = gaussian(z)
+        g0 = g0 * sy
+        g1 = g1 * sy + ty
+        return z, r, g0, g1
 
 
 class CovReLU(nn.ReLU):
