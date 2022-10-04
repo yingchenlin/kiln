@@ -29,7 +29,7 @@
   },
   "fit": {
     "num_epochs": 50,
-    "ckpt_interval": 25,
+    "ckpt_interval": 10,
     "num_samples": 1,
     "loss_fn": {
       "name": "ce"

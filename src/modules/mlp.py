@@ -2,7 +2,11 @@ import numpy as np
 from torch import nn
 
 from .dropouts import Regularization, get_dropout
-from metrics import CaptureLayer
+
+if __package__ == "modules":
+    from metrics import CaptureLayer
+else:
+    from ..metrics import CaptureLayer
 
 
 def get_activation(config):
