@@ -26,7 +26,7 @@
     },
     "lyr": {
       "schemes": ["mean"],
-      "activations": ["relu"],
+      "activations": ["tanh"],
       "layers": ["l"]
     },
     "hpo": {
