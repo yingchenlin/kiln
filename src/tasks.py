@@ -100,7 +100,7 @@ class Task:
         if self.verbose:
             dataloader = tqdm(dataloader, ncols=80, leave=False)
 
-        for metrics in self.engine.train(dataloader):
+        for metrics in self.engine.train(dataloader, self.epoch):
             outputs = self._format(metrics)
             if self.verbose:
                 dataloader.set_postfix(outputs)
@@ -113,7 +113,7 @@ class Task:
         if self.verbose:
             dataloader = tqdm(dataloader, ncols=80, leave=False)
 
-        for metrics in self.engine.eval(dataloader):
+        for metrics in self.engine.eval(dataloader, self.epoch):
             outputs = self._format(metrics)
             if self.verbose:
                 dataloader.set_postfix(outputs)

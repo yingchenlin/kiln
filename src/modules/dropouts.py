@@ -24,14 +24,31 @@ class DropoutBase(nn.Linear):
         super().__init__(input_dim, output_dim)
         self.std = std
         self.on = config["on"]
+        self.start_epoch = config["start_epoch"]
+        self.stop_epoch = config["stop_epoch"]
+        self.epoch = 0
         self._setup()
 
     def extra_repr(self):
-        return f"std={self.std}, on={self.on}, in={self.in_features}, out={self.out_features}"
+        return " ".join([f"{k}={v}" for k, v in {
+            "in": self.in_features,
+            "out": self.out_features,
+            "std": self.std,
+            "on": self.on,
+            "start_epoch": self.start_epoch,
+            "stop_epoch": self.stop_epoch,
+        }.items()])
+
+    def set_epoch(self, epoch):
+        self.epoch = epoch
+
+    def _enabled(self):
+        return self.epoch > self.start_epoch and (
+            self.stop_epoch < 0 or self.epoch <= self.stop_epoch)
 
     def forward(self, x):
         w, b = self.weight, self.bias
-        if self.training:
+        if self.training and self.std > 0 and self._enabled():
             if self.on == "state":
                 x = x * self._sample(x.shape, x.device)
             if self.on == "weight":

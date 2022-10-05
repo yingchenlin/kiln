@@ -44,8 +44,9 @@ class Engine:
             "optimizer": self.optimizer.state_dict(),
         }, path)
 
-    def train(self, dataloader):
+    def train(self, dataloader, epoch):
 
+        self.model.set_epoch(epoch)
         self.model.train()
         self.metrics.reset()
 
@@ -67,8 +68,9 @@ class Engine:
 
             yield self.metrics.get()
 
-    def eval(self, dataloader):
+    def eval(self, dataloader, epoch):
 
+        self.model.set_epoch(epoch)
         self.model.eval()
         self.metrics.reset()
 

@@ -29,6 +29,11 @@
       "activations": ["tanh"],
       "layers": ["l"]
     },
+    "epc": {
+      "schemes": ["mean"],
+      "activations": ["tanh"],
+      "epochs": true
+    },
     "hpo": {
       "schemes": ["mean"],
       "std": ["s0.0"],
@@ -95,6 +100,18 @@
       "lin-apx": {"model": {"dropout": {"name": "lin-apx"}}},
       "l2s": {"model": {"dropout": {"name": "l2", "on": "state", "std": 2e-5}}},
       "l2w": {"model": {"dropout": {"name": "l2", "on": "weight", "std": 1e-2}}}
+    },
+    "epochs": {
+      "b0": {"model": {"dropout": {"start_epoch": 0}}},
+      "b10": {"model": {"dropout": {"start_epoch": 10}}},
+      "b20": {"model": {"dropout": {"start_epoch": 20}}},
+      "b30": {"model": {"dropout": {"start_epoch": 30}}},
+      "b40": {"model": {"dropout": {"start_epoch": 40}}},
+      "e0": {"model": {"dropout": {"stop_epoch": 0}}},
+      "e10": {"model": {"dropout": {"stop_epoch": 10}}},
+      "e20": {"model": {"dropout": {"stop_epoch": 20}}},
+      "e30": {"model": {"dropout": {"stop_epoch": 30}}},
+      "e40": {"model": {"dropout": {"stop_epoch": 40}}}
     },
     "cov-loss": {
       "mc": {"fit": {"loss_fn": {"name": "cov-mc-ce", "num_samples": 1000}}},

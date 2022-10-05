@@ -1,7 +1,7 @@
 import numpy as np
 from torch import nn
 
-from .dropouts import Regularization, get_dropout
+from .dropouts import DropoutBase, Regularization, get_dropout
 
 if __package__ == "modules":
     from metrics import CaptureLayer
@@ -52,32 +52,38 @@ class MLP(nn.Sequential):
 
     def __init__(self, config, input_shape, num_classes):
 
-        input_dim = np.prod(input_shape)
-        output_dim = num_classes
-        hidden_dim = config["hidden_dim"]
-        num_layers = config["num_layers"]
+        self.config = config
 
         layers = []
         layers.append(self.Flatten(start_dim=2))
-        for i in range(num_layers):
-            layers.append(self._get_dropout(config["dropout"], i, input_dim, hidden_dim))
-            layers.append(CaptureLayer(hidden_dim, num_classes))
-            layers.append(self._get_activation(config["activation"], i))
-            layers.append(CaptureLayer(hidden_dim, num_classes))
-            input_dim = hidden_dim
-        layers.append(self._get_dropout(config["dropout"], num_layers, input_dim, output_dim))
+        output_dim = np.prod(input_shape)
+        for i in range(config["num_layers"]):
+            input_dim, output_dim = output_dim, config["hidden_dim"]
+            layers.append(self._get_dropout(i, input_dim, output_dim))
+            layers.append(CaptureLayer(output_dim, num_classes))
+            layers.append(self._get_activation(i))
+            layers.append(CaptureLayer(output_dim, num_classes))
+        input_dim, output_dim = output_dim, num_classes
+        layers.append(self._get_dropout(config["num_layers"], input_dim, output_dim))
         layers.append(CaptureLayer(output_dim, num_classes))
 
         super().__init__(*layers)
 
-    def _get_dropout(self, config, layer, input_dim, output_dim):
+    def _get_dropout(self, layer, input_dim, output_dim):
+        config = self.config["dropout"]
         std = config["std"] if layer in config["layers"] else 0
         return self.Dropout(config, input_dim, output_dim, std)
 
-    def _get_activation(self, config, layer):
+    def _get_activation(self, layer):
+        config = self.config["activation"]
         if layer not in config["layers"]:
             return nn.Identity()
         return self.Activation(config)
+
+    def set_epoch(self, epoch):
+        for m in self.modules():
+            if isinstance(m, DropoutBase):
+                m.set_epoch(epoch)
 
     def reg_loss(self):
         ctx = {}
