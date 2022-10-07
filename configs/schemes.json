@@ -25,9 +25,9 @@
       "cov-cross": ["c0", "c1"]
     },
     "lyr": {
-      "schemes": ["mean"],
-      "activations": ["tanh"],
-      "layers": ["l"]
+      "schemes": ["cov"],
+      "activations": ["tanh", "relu"],
+      "layers": true
     },
     "epc": {
       "schemes": ["mean"],

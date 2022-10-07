@@ -1,6 +1,8 @@
 import torch
 import torchvision
 
+from functools import lru_cache
+
 
 class ImageDataset:
 
@@ -27,6 +29,7 @@ class ImageDataset:
         return transform
 
     @staticmethod
+    @lru_cache(maxsize=32)
     def _load_dataset(name, path):
         root = f"{path}/{name}"
 
