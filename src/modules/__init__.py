@@ -5,7 +5,6 @@ from .rnn import *
 from .dropouts import *
 from .dist_cov import *
 from .dist_var import *
-from .losses import *
 
 from torch import optim
 
@@ -17,7 +16,7 @@ def get_loss_fn(config):
     if name == "multi-ce":
         return MultiCrossEntropyLoss()
     if name == "cov-quad-ce":
-        return CovQuadraticCrossEntropyLoss()
+        return CovQuadraticCrossEntropyLoss(config)
     if name == "cov-mc-ce":
         return CovMonteCarloCrossEntropyLoss(config)
     if name == "var-mc-ce":

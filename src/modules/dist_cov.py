@@ -227,11 +227,16 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
 
 class CovQuadraticCrossEntropyLoss(nn.Module):
 
+    def __init__(self, config):
+        super().__init__()
+        self.stop_grad = config["stop_grad"]
+
     def forward(self, input, target):
         (m, k), i = input, target
         quad_term = 0
         if k != None:
             p = m.softmax(-1)
             h = p.diag_embed(0, -2, -1) - p.unsqueeze(-2) * p.unsqueeze(-1)
-            quad_term = torch.einsum("bij,bij->b", k, h) * 0.5
+            if self.stop_grad: h = h.detach()
+            quad_term = torch.einsum("sbij,sbij->sb", k, h) * 0.5
         return cross_entropy(m, i) + quad_term

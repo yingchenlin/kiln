@@ -50,7 +50,8 @@
       "l2w": true
     },
     "test": {
-      "schemes": ["cov"]
+      "schemes": ["cov"],
+      "cov-loss": ["quad"]
     }
   },
   "factors": {
