@@ -193,7 +193,7 @@ class CovDropout(nn.Linear):
 class CovMLP(MLP):
 
     Flatten = DistFlatten
-    Activation = get_activation
+    Activation = lambda _, *args: get_activation(*args)
     Dropout = CovDropout
 
 
