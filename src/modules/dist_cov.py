@@ -21,12 +21,8 @@ def get_activation(config):
     name = config["name"]
     if name == "relu":
         return CovReLU(config)
-    if name == "erf":
-        return CovErf(config, 1, 0, 1, 0)
-    if name == "erf-s":
-        return CovErf(config, np.sqrt(np.pi)/4, 0, 0.5, 0.5)
-    if name == "erf-t":
-        return CovErf(config, np.sqrt(np.pi)/2, 0, 1, 0)
+    if name in CovErf.TX:
+        return CovErf(config)
     raise Exception(f"unknown activation '{name}'")
 
 
@@ -197,7 +193,7 @@ class CovDropout(nn.Linear):
 class CovMLP(MLP):
 
     Flatten = DistFlatten
-    Activation = CovReLU
+    Activation = get_activation
     Dropout = CovDropout
 
 
