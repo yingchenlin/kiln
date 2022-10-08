@@ -26,7 +26,8 @@
     },
     "lyr": {
       "schemes": ["cov"],
-      "activations": ["erf-t"],
+      "cov-loss": ["quad"],
+      "activations": ["relu", "erf-t"],
       "layers": true
     },
     "epc": {
