@@ -37,7 +37,7 @@
       "cov-order": ["o1"],
       "cov-biased": ["b0"],
       "cov-cross": ["c0"],
-      "cov-stop-grad": true
+      "cov-stop-grad": ["none"]
     },
     "epc": {
       "schemes": ["mean"],
@@ -142,6 +142,7 @@
       "c1": {"model": {"dropout": {"dropout_cross": true}}}
     },
     "cov-stop-grad": {
+      "none": {},
       "gsg": {"model": {"activation": {"stop_grad": true}}},
       "xsg": {"model": {"dropout": {"state_stop_grad": true}}},
       "wsg": {"model": {"dropout": {"weight_stop_grad": true}}},
