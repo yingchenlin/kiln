@@ -30,6 +30,12 @@
       "activations": ["relu", "erf-t"],
       "layers": true
     },
+    "grd": {
+      "schemes": ["cov"],
+      "cov-loss": ["quad"],
+      "activations": ["relu", "erf-t"],
+      "cov-stop-grad": true
+    },
     "epc": {
       "schemes": ["mean"],
       "activations": ["tanh"],
