@@ -34,6 +34,9 @@
       "schemes": ["cov"],
       "cov-loss": ["quad"],
       "activations": ["relu", "erf-t"],
+      "cov-order": ["o1"],
+      "cov-biased": ["b0"],
+      "cov-cross": ["c0"],
       "cov-stop-grad": true
     },
     "epc": {
@@ -144,7 +147,8 @@
       "wsg": {"model": {"dropout": {"weight_stop_grad": true}}},
       "psg": {"model": {"dropout": {"propagate_stop_grad": true}}},
       "lsg": {"model": {"dropout": {"weight_stop_grad": true, "propagate_stop_grad": true}}},
-      "hsg": {"fit": {"loss_fn": {"stop_grad": true}}}
+      "hsg": {"fit": {"loss_fn": {"stop_grad": true}}},
+      "o0": {"model": {"activation": {"order": 0}}}
     },
     "lr": {
       "l2e-3": {"fit": {"optimizer": {"learning_rate": 2e-3}}},
