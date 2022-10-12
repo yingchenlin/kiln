@@ -153,6 +153,7 @@ def run(get_engine):
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", "-p", type=str, default="configs/plan.json")
     parser.add_argument("--groups", "-g", type=str, default="")
+    parser.add_argument("--skips", "-k", type=int, default=0)
     parser.add_argument("--samples", "-s", type=int, default=1)
     parser.add_argument("--threads", "-t", type=int, default=2)
     parser.add_argument("--label", "-l", type=str, default="test")
@@ -188,7 +189,7 @@ def run(get_engine):
     # build tasks
     tasks = []
     for group in args.groups.split(","):
-        dims = build_dims(plan, group, args.samples)
+        dims = build_dims(plan, group, range(args.skips, args.samples))
         for comb in itertools.product(*dims):
             values, updates = zip(*comb)
             config_ = functools.reduce(merge, updates, config)
@@ -234,7 +235,7 @@ def merge(x, y):
     return x
 
 
-def build_dims(plan, group, num_samples):
+def build_dims(plan, group, samples):
 
     dims = []
     for factor, value in plan["groups"][group].items():
@@ -247,7 +248,7 @@ def build_dims(plan, group, num_samples):
         elif value is True:
             dims.append(dim.items())
 
-    samples = {f"{i}": {} for i in range(num_samples)}
+    samples = {f"{i}": {} for i in samples}
     dims.append(samples.items())
 
     return dims
