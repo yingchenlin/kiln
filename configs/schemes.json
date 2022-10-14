@@ -33,7 +33,7 @@
     "grd": {
       "schemes": ["cov"],
       "cov-loss": ["quad"],
-      "activations": ["relu", "erf-t"],
+      "activations": ["erf-t"],
       "cov-order": ["o1"],
       "cov-biased": ["b0"],
       "cov-cross": ["c0"],
@@ -49,6 +49,11 @@
       "std": ["s0.0"],
       "lr": true,
       "bs": true
+    },
+    "dim": {
+      "schemes": ["mean"],
+      "activations": ["relu", "tanh"],
+      "dims": true
     },
     "l2s": {
       "schemes": ["l2s"],
@@ -123,6 +128,12 @@
       "e20": {"model": {"dropout": {"stop_epoch": 20}}},
       "e30": {"model": {"dropout": {"stop_epoch": 30}}},
       "e40": {"model": {"dropout": {"stop_epoch": 40}}}
+    },
+    "dims": {
+      "d100": {"model": {"hidden_dim": 100}},
+      "d200": {"model": {"hidden_dim": 200}},
+      "d300": {"model": {"hidden_dim": 300}},
+      "d400": {"model": {"hidden_dim": 400}}
     },
     "cov-loss": {
       "mc": {"fit": {"loss_fn": {"name": "cov-mc-ce", "num_samples": 1000}}},
