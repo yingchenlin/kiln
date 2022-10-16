@@ -5,10 +5,6 @@
       "schemes": true,
       "layers": ["l2"]
     },
-    "lin-apx": {
-      "schemes": ["lin-apx"],
-      "lin-apx": true
-    },
     "cov": {
       "schemes": ["cov"],
       "cov-loss": ["mc"],
@@ -118,7 +114,6 @@
           }
         }
       },
-      "lin-apx": {"model": {"dropout": {"name": "lin-apx"}}},
       "l2s": {"model": {"dropout": {"name": "l2", "on": "state", "std": 2e-5}}},
       "l2w": {"model": {"dropout": {"name": "l2", "on": "weight", "std": 1e-2}}}
     },
