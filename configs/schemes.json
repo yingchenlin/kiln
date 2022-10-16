@@ -21,9 +21,8 @@
       "cov-cross": ["c0", "c1"]
     },
     "lyr": {
-      "schemes": ["cov"],
-      "cov-loss": ["quad"],
-      "activations": ["relu", "erf-t"],
+      "schemes": ["mean"],
+      "activations": ["relu", "tanh"],
       "layers": true
     },
     "grd": {
