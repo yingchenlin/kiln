@@ -25,6 +25,12 @@
       "activations": ["relu", "tanh"],
       "layers": true
     },
+    "onn": {
+      "schemes": ["mean"],
+      "on": ["weight"],
+      "activations": ["relu", "tanh"],
+      "layers": true
+    },
     "grd": {
       "schemes": ["cov"],
       "cov-loss": ["quad"],
@@ -170,6 +176,10 @@
       "b50": {"dataset": {"train": {"batch_size": 50}}},
       "b100": {"dataset": {"train": {"batch_size": 100}}},
       "b200": {"dataset": {"train": {"batch_size": 200}}}
+    },
+    "on": {
+      "state": {"model": {"dropout": {"on": "state"}}},
+      "weight": {"model": {"dropout": {"on": "weight"}}}
     },
     "std": {
       "s0.3": {"model": {"dropout": {"std": 0.3}}},
