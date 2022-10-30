@@ -1,6 +1,5 @@
 from .ae import *
 from .mlp import *
-from .cnn import *
 from .rnn import *
 from .dropouts import *
 from .dist_cov import *

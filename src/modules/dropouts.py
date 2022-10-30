@@ -23,36 +23,34 @@ class DropoutBase(nn.Linear):
     def __init__(self, config, input_dim, output_dim, std):
         super().__init__(input_dim, output_dim)
         self.std = std
-        self.on = config["on"]
-        self.start_epoch = config["start_epoch"]
-        self.stop_epoch = config["stop_epoch"]
+        self.target = config["target"]
+        self.epoch_range = config["epoch_range"]
         self.epoch = 0
         self._setup()
 
     def extra_repr(self):
         return " ".join([f"{k}={v}" for k, v in {
-            "in": self.in_features,
-            "out": self.out_features,
+            "in_dim": self.in_features,
+            "out_dim": self.out_features,
             "std": self.std,
-            "on": self.on,
-            "start_epoch": self.start_epoch,
-            "stop_epoch": self.stop_epoch,
+            "target": self.target,
+            "epoch_range": self.epoch_range,
         }.items()])
 
     def set_epoch(self, epoch):
         self.epoch = epoch
 
-    def _enabled(self):
-        return self.epoch > self.start_epoch and (
-            self.stop_epoch < 0 or self.epoch <= self.stop_epoch)
+    def _in_epoch_range(self):
+        epoch0, epoch1 = self.epoch_range
+        return self.epoch > epoch0 and (epoch1 < 0 or self.epoch <= epoch1)
 
     def forward(self, x):
         w, b = self.weight, self.bias
-        if self.training and self.std > 0 and self._enabled():
-            if self.on == "state":
+        if self.training and self.std > 0 and self._in_epoch_range():
+            if self.target == "state":
                 x = x * self._sample(x.shape, x.device)
-            if self.on == "weight":
-                w = w * self._sample(w.shape, w.device)
+            if self.target == "weight":
+                w = w * self._sample(x.shape, x.device)
         return x @ w.T + b
 
     def _setup(self):

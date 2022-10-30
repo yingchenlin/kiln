@@ -53,19 +53,20 @@ class MLP(nn.Sequential):
     def __init__(self, config, input_shape, num_classes):
 
         self.config = config
+        output_dim = np.prod(input_shape)
+        hidden_dim = config["hidden_dim"]
+        num_layers = config["num_layers"]
 
         layers = []
         layers.append(self.Flatten(start_dim=2))
-        output_dim = np.prod(input_shape)
-        for i in range(config["num_layers"]):
-            input_dim, output_dim = output_dim, config["hidden_dim"]
+        for i in range(num_layers):
+            input_dim, output_dim = output_dim, hidden_dim
             layers.append(self._get_dropout(i, input_dim, output_dim))
-            layers.append(CaptureLayer(output_dim, num_classes))
             layers.append(self._get_activation(i))
-            layers.append(CaptureLayer(output_dim, num_classes))
+            layers.append(CaptureLayer())
         input_dim, output_dim = output_dim, num_classes
-        layers.append(self._get_dropout(config["num_layers"], input_dim, output_dim))
-        layers.append(CaptureLayer(output_dim, num_classes))
+        layers.append(self._get_dropout(num_layers, input_dim, output_dim))
+        layers.append(CaptureLayer())
 
         super().__init__(*layers)
 

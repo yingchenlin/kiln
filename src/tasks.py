@@ -17,16 +17,21 @@ from torch.utils.data import DataLoader
 
 class IEngine:
 
+    epoch: int
+
     def setup(self, config: dict, output_path: str, dataset_path: str, device: torch.device, verbose: bool) -> None:
         pass
 
-    def get_dataloader(self, test: bool) -> DataLoader:
+    def get_dataloader(self, eval: bool) -> DataLoader:
         pass
 
     def load_state(self, path: str) -> None:
         pass
 
     def save_state(self, path: str) -> None:
+        pass
+
+    def next_epoch(self) -> int:
         pass
 
     def train(self, dataloader: DataLoader) -> Iterator[Dict[str, float]]:
@@ -62,8 +67,7 @@ class Task:
 
         self._setup()
 
-        while self.epoch < self.num_epochs:
-            self.epoch += 1
+        while self.engine.next_epoch() <= self.num_epochs:
             self._train()
             self._eval()
             self._log()
@@ -82,7 +86,6 @@ class Task:
         with open(f"{self.output_path}/config.json", "w")as f:
             json.dump(self.config, f, indent=2)
 
-        self.epoch = 0
         self.num_epochs = self.config["fit"]["num_epochs"]
         self.ckpt_interval = self.config["fit"]["ckpt_interval"]
         self.logs = []
@@ -96,11 +99,11 @@ class Task:
 
     def _train(self):
 
-        dataloader = self.engine.get_dataloader(test=False)
+        dataloader = self.engine.get_dataloader(eval=False)
         if self.verbose:
             dataloader = tqdm(dataloader, ncols=80, leave=False)
 
-        for metrics in self.engine.train(dataloader, self.epoch):
+        for metrics in self.engine.train(dataloader):
             outputs = self._format(metrics)
             if self.verbose:
                 dataloader.set_postfix(outputs)
@@ -109,17 +112,17 @@ class Task:
 
     def _eval(self):
 
-        dataloader = self.engine.get_dataloader(test=True)
+        dataloader = self.engine.get_dataloader(eval=True)
         if self.verbose:
             dataloader = tqdm(dataloader, ncols=80, leave=False)
 
-        for metrics in self.engine.eval(dataloader, self.epoch):
+        for metrics in self.engine.eval(dataloader):
             outputs = self._format(metrics)
             if self.verbose:
                 dataloader.set_postfix(outputs)
 
         status = " ".join([f"{k}={v}" for k, v in outputs.items()])
-        logging.info(f"{self.label}: epoch={self.epoch} {status}")
+        logging.info(f"{self.label}: epoch={self.engine.epoch} {status}")
 
         self.eval_metrics = metrics
 
@@ -139,9 +142,9 @@ class Task:
         with open(f"{self.output_path}/logs.json", "w")as f:
             json.dump(self.logs, f, indent=2)
 
-        if self.checkpoint and self.epoch % self.ckpt_interval == 0:
+        if self.checkpoint and self.engine.epoch % self.ckpt_interval == 0:
             self.engine.save_state(
-                f"{self.output_path}/checkpoint-{self.epoch}.pt")
+                f"{self.output_path}/checkpoint-{self.engine.epoch}.pt")
 
     def _finish(self):
         with open(f"{self.output_path}/done", "w"):

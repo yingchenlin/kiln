@@ -132,7 +132,7 @@ class CovDropout(nn.Linear):
         self.in_dim = in_dim
         self.out_dim = out_dim
         self.std = std
-        self.on = config["on"]
+        self.target = config["target"]
         self.dropout_cross = config["dropout_cross"]
         self.state_stop_grad = config["state_stop_grad"]
         self.weight_stop_grad = config["weight_stop_grad"]
@@ -174,7 +174,7 @@ class CovDropout(nn.Linear):
         d = d * self.std ** 2
 
         kp = w @ d.diag_embed() @ w.T
-        if self.on == "weight":
+        if self.target == "weight":
             kp = kp.diagonal(0, -2, -1).diag_embed()
 
         return kp
@@ -211,8 +211,9 @@ class CovMonteCarloCrossEntropyLoss(nn.Module):
 
         # sample from multivariate normal distribution
         l, _ = torch.linalg.cholesky_ex(k)
-        r = torch.randn((self.num_samples, 1, l.size(-1), 1), device=l.device)
-        d = (l.unsqueeze(0) @ r).squeeze(-1)
+        r = torch.randn((self.num_samples, l.size(-1)), device=l.device)
+        while r.dim() < l.dim(): r = r.unsqueeze(-2)
+        d = (l.unsqueeze(0) @ r.unsqueeze(-1)).squeeze(-1)
 
         # expected value of cross entropy loss
         mp = m.unsqueeze(0)

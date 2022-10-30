@@ -1,15 +1,24 @@
 from typing import Dict
-import torch.nn.functional as F
+import torch.nn as nn
 
 from .aggregators import *
 from .ranking import Ranking
-from .modules import CaptureLayer
 
 
 def ce(x, i):
     if isinstance(x, tuple):
         x = x[0]
     return x.logsumexp(-1) - x.gather(-1, i.unsqueeze(-1)).squeeze(-1)
+
+
+class CaptureLayer(nn.Module):
+
+    def forward(self, input):
+        self.state = input
+        if isinstance(self.state, tuple):
+            self.state = self.state[0]
+        self.state.retain_grad()
+        return input
 
 
 class Metrics:
@@ -28,7 +37,6 @@ class Metrics:
     def add_states(self, targets: torch.Tensor, model: torch.nn.Module):
         for name, module in model.named_modules():
             if isinstance(module, CaptureLayer):
-                self._add(f"${name}.state.l0", "l0", module.state)
                 self._add(f"${name}.state.l2", "l2", module.state)
 
     def add_losses(self, outputs: torch.Tensor, targets: torch.Tensor, losses: torch.Tensor):
@@ -41,7 +49,6 @@ class Metrics:
 
     def add_params(self, model: torch.nn.Module):
         for name, param in model.named_parameters():
-            self._add(f"${name}.l0", "l0", param)
             self._add(f"${name}.l2", "l2", param)
 
     def _add(self, key: str, agg: str, value: torch.Tensor):

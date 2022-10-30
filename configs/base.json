@@ -23,9 +23,8 @@
     "dropout": {
       "name": "bernoulli",
       "std": 0.5,
-      "on": "state",
-      "start_epoch": 0,
-      "stop_epoch": -1,
+      "target": "state",
+      "epoch_range": [0, -1],
       "layers": [1, 2, 3]
     }
   },
