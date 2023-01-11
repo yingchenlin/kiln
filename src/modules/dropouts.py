@@ -24,6 +24,7 @@ class DropoutBase(nn.Linear):
         super().__init__(input_dim, output_dim)
         self.std = std
         self.target = config["target"]
+        self.zero_mean = config["zero_mean"]
         self.epoch_range = config["epoch_range"]
         self.epoch = 0
         self._setup()
@@ -34,6 +35,7 @@ class DropoutBase(nn.Linear):
             "out_dim": self.out_features,
             "std": self.std,
             "target": self.target,
+            "zero_mean": self.zero_mean,
             "epoch_range": self.epoch_range,
         }.items()])
 
@@ -48,13 +50,19 @@ class DropoutBase(nn.Linear):
         w, b = self.weight, self.bias
         if self.training and self.std > 0 and self._in_epoch_range():
             if self.target == "state":
-                x = x * self._sample(x.shape, x.device)
+                x = x * self._get_scale(x.shape, x.device)
             if self.target == "weight":
-                w = w * self._sample(x.shape, x.device)
+                w = w * self._get_scale(w.shape, w.device)
         return x @ w.T + b
 
     def _setup(self):
         pass
+
+    def _get_scale(self, shape, device):
+        scale = self._sample(shape, device)
+        if self.zero_mean:
+            scale = scale - scale.mean(-1, keepdim=True) + 1
+        return scale
 
     def _sample(self, shape, device):
         raise Exception("unimplemented method")

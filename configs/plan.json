@@ -70,8 +70,9 @@
       "l2w": true
     },
     "test": {
-      "schemes": ["none", "mean", "cov"],
-      "activations": ["relu", "erf-t"]
+      "schemes": ["base", "mean"],
+      "activations": ["relu", "erf-t"],
+      "means": true
     }
   },
   "factors": {
@@ -82,6 +83,10 @@
       "erf": {"model": {"activation": {"name": "erf"}}},
       "erf-s": {"model": {"activation": {"name": "erf-s"}}},
       "erf-t": {"model": {"activation": {"name": "erf-t"}}}
+    },
+    "means": {
+      "fm": {"model": {"dropout": {"zero_mean": false}}},
+      "zm": {"model": {"dropout": {"zero_mean": true}}}
     },
     "layers": {
       "l": {"model": {"dropout": {"layers": []}}},

@@ -4,11 +4,11 @@
     "name": "cifar-10",
     "path": "datasets",
     "train": {
-      "batch_size": 50,
+      "batch_size": 100,
       "shuffle": true
     },
     "test": {
-      "batch_size": 50,
+      "batch_size": 100,
       "shuffle": false
     }
   },
@@ -24,6 +24,7 @@
       "name": "bernoulli",
       "std": 0.5,
       "target": "state",
+      "zero_mean": false,
       "epoch_range": [0, -1],
       "layers": [1, 2, 3]
     }
@@ -38,7 +39,7 @@
     "optimizer": {
       "name": "sgd",
       "momentum": 0.9,
-      "learning_rate": 5e-3,
+      "learning_rate": 1e-2,
       "weight_decay": 0
     }
   },
